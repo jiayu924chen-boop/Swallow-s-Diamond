@@ -92,8 +92,19 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         }
     }
 
+    public static void ResetSavedProgress()
+    {
+        for (int i = 0; i < buttonProgress.Length; i++)
+        {
+            buttonProgress[i] = 0;
+            PlayerPrefs.DeleteKey(ProgressKeyPrefix + i);
+        }
+        PlayerPrefs.Save();
+    }
+
     private void Awake()
     {
+        CarpetBgmPlayer.EnsurePlaying();
         uiFont = LoadUiFont();
         ApplyJsonConfig();
         settingsButtonSprite = LoadSpriteResource(SettingsButtonIconPath);
@@ -724,12 +735,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
     private void ResetAllProgress()
     {
-        for (int i = 0; i < buttonProgress.Length; i++)
-        {
-            buttonProgress[i] = 0;
-            PlayerPrefs.DeleteKey(ProgressKeyPrefix + i);
-        }
-        PlayerPrefs.Save();
+        CarpetLevelFlow.ResetGameAndReturnToIntro();
     }
 
     private static bool GetBoolSetting(string key, bool defaultValue)
@@ -747,6 +753,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     {
         PlayerPrefs.SetInt(SoundKey, GetBoolSetting(SoundKey, true) ? 1 : 0);
         PlayerPrefs.Save();
+        CarpetBgmPlayer.ApplySavedSetting();
     }
 
     private Button AddButton(RectTransform parent, string label, Color color, Action onClick)

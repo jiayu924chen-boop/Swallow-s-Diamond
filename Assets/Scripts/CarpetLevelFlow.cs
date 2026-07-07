@@ -65,6 +65,15 @@ public static class CarpetLevelFlow
         LoadSceneDeferred(MenuSceneName);
     }
 
+    public static void ResetGameAndReturnToIntro()
+    {
+        RequestedButtonIndex = -1;
+        RequestedLevel = 0;
+        CarpetLevelMenu.ResetSavedProgress();
+        CarpetBgmPlayer.RestartFromBeginning();
+        LoadSceneDeferred(IntroSceneName);
+    }
+
     private static void LoadSceneDeferred(string sceneName)
     {
         transitionInProgress = true;

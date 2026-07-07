@@ -1,6 +1,6 @@
 # Carpet Grid Unity Demo 开发接管文档
 
-更新时间：2026-07-07  
+更新时间：2026-07-07
 工程路径：`D:\DEMO`  
 引擎版本：Unity `2022.3.62f2`
 
@@ -55,6 +55,7 @@ Unity 包依赖位于 `Packages/manifest.json`：
 - `com.unity.ugui`：运行时 UI。
 - `com.unity.modules.ui`：Unity UI 基础模块。
 - `com.unity.modules.video`：开场视频播放。
+- Unity AudioSource/AudioClip：跨场景循环背景音乐。
 - `com.unity.modules.imgui`：编辑器窗口 UI。
 - `com.unity.modules.jsonserialize`：`JsonUtility` 序列化。
 
@@ -74,6 +75,7 @@ D:\DEMO
 │  │  ├─ level-002.json
 │  │  └─ ...
 │  ├─ Resources
+│  │  ├─ Audio
 │  │  ├─ Art
 │  │  ├─ Intro
 │  │  └─ Menu
@@ -82,6 +84,7 @@ D:\DEMO
 │  │  ├─ LevelSelectMenu.unity
 │  │  └─ Main.unity
 │  ├─ Scripts
+│  │  ├─ CarpetBgmPlayer.cs
 │  │  ├─ CarpetGridGame.cs
 │  │  ├─ CarpetLevelFlow.cs
 │  │  ├─ CarpetLevelMenu.cs
@@ -115,6 +118,7 @@ D:\DEMO
 - 再次点击进入视频播放。
 - 视频播放结束后显示过渡层，并加载 `LevelSelectMenu` 场景。
 - 如果视频加载失败或超时，直接进入过渡层再到菜单。
+- 开场视频音频输出已关闭，背景音乐由 `CarpetBgmPlayer` 统一播放。
 
 配置项包括：
 
@@ -147,10 +151,10 @@ D:\DEMO
 - 点击开放章节时，根据当前章节进度进入对应关卡。
 - 菜单支持背景图、装饰图、装饰阴影、呼吸动画、帧动画、触发动画文件夹。
 - 内置设置面板：
-  - 音乐开关。
+  - 音乐开关，会实时控制 `CarpetBgmPlayer` 音量/静音状态。
   - 音效开关。
   - 震动开关。
-  - 重置游戏进度。
+  - 重置游戏进度，当前会清空章节进度、重置背景音乐并返回 `Intro`。
 
 进度使用 `PlayerPrefs` 保存：
 
@@ -171,6 +175,7 @@ D:\DEMO
 - `ConsumeRequestedLevel()`：`Main` 场景启动时读取并清空请求关卡号。
 - `CompleteActiveLevelAndReturn()`：通关后推进章节进度并返回菜单。
 - `ReturnToMenu()`：不推进进度，直接返回菜单。
+- `ResetGameAndReturnToIntro()`：清空待进入关卡、重置章节进度、从头播放背景音乐并加载 `Intro`。
 - 内部使用 `CarpetSceneTransitionRunner` 处理异步加载，避免重复触发。
 
 ### 5.4 `Assets/Scripts/CarpetGridGame.cs`
@@ -194,7 +199,20 @@ D:\DEMO
 - 拖拽步进间隔：`0.055s`
 - 移动动画时间：`0.13s`
 
-### 5.5 `Assets/Editor/CarpetMenuLayoutEditor.cs`
+当前主玩法界面的重开按钮不再只重置当前关卡，而是调用 `CarpetLevelFlow.ResetGameAndReturnToIntro()`，等价于重置游戏进度并回到开场。
+
+### 5.5 `Assets/Scripts/CarpetBgmPlayer.cs`
+
+负责全局背景音乐：
+
+- 通过 `RuntimeInitializeOnLoadMethod` 在场景加载前自动创建并 `DontDestroyOnLoad`。
+- 从 `Assets/Resources/Audio/perfect_beauty_bgm.mp3` 加载 `AudioClip`，运行时路径为 `Audio/perfect_beauty_bgm`。
+- 使用循环播放，默认音量 `0.55`。
+- 读取 `PlayerPrefs` 的 `carpet-setting-sound`，音乐关闭时音量为 0 且静音。
+- 跨场景检查 `AudioListener`，如果场景没有可用 Listener，会在自身 GameObject 上启用一个兜底 Listener。
+- `RestartFromBeginning()` 用于重置流程时从头播放 BGM。
+
+### 5.6 `Assets/Editor/CarpetMenuLayoutEditor.cs`
 
 Unity 编辑器工具，菜单入口：
 
@@ -417,6 +435,8 @@ Assets/StreamingAssets/Intro/intro_story_config.json
 - 指定开始按钮图：`Intro/start_button`
 - 配置剧情页和逐字显示速度。
 
+视频本身当前不输出音频，避免与全局背景音乐叠加。
+
 注意：当前该 JSON 内的剧情文本存在中文编码乱码，运行时会按乱码内容显示。需要在交付前用 UTF-8 正确文本重新写入。
 
 ## 8. 资源清单
@@ -455,6 +475,7 @@ Assets/Resources/Menu
 - 角色静态图：`menu_character_chibi_static_final.png`
 - 设置按钮：`icon_settings_gear.png`
 - NPC/云/闪电等动画帧：`animation/*`
+- 对话气泡图片：`生成对话气泡.png`、`生成对话气泡 (1).png`，当前已补充 Unity `.meta`。
 
 ### 8.3 开场资源
 
@@ -471,6 +492,18 @@ Assets/StreamingAssets/Intro
 - `start_button.png`
 - `intro_video.mp4`
 - `intro_story_config.json`
+
+### 8.4 音频资源
+
+位于：
+
+```text
+Assets/Resources/Audio
+```
+
+主要资源：
+
+- `perfect_beauty_bgm.mp3`：全局循环背景音乐，由 `CarpetBgmPlayer` 通过 `Resources.Load("Audio/perfect_beauty_bgm")` 加载。
 
 ## 9. 工具与产物
 
@@ -563,7 +596,23 @@ Unity Editor > Tools > Carpet > Menu Layout Editor
 4. 点击推进剧情并进入视频。
 5. 视频结束后进入章节菜单。
 6. 点击章节一，进入关卡 1。
-7. 拖动地毯完成关卡，确认胜利后自动返回菜单。
-8. 确认章节一进度推进到关卡 2。
-9. 打开 `Tools/Carpet/Menu Layout Editor`，Reload 并保存一次菜单配置。
-10. 修改一个关卡 JSON 后重新运行，确认关卡加载规则符合预期。
+7. 确认进入 Intro、菜单、Main 期间背景音乐持续循环，不因场景切换中断。
+8. 在菜单设置里关闭/开启音乐，确认 BGM 立即静音/恢复。
+9. 播放开场视频时确认不会叠加视频音频。
+10. 在 Main 场景点击重开按钮，确认会清空进度、BGM 从头播放并返回 Intro。
+11. 拖动地毯完成关卡，确认胜利后自动返回菜单。
+12. 确认章节一进度推进到关卡 2。
+13. 打开 `Tools/Carpet/Menu Layout Editor`，Reload 并保存一次菜单配置。
+14. 修改一个关卡 JSON 后重新运行，确认关卡加载规则符合预期。
+
+## 13. 变更记录
+
+### 2026-07-07 背景音乐与重置流程
+
+- 新增 `Assets/Scripts/CarpetBgmPlayer.cs`，负责跨场景循环播放 `Assets/Resources/Audio/perfect_beauty_bgm.mp3`。
+- `IntroSceneController`、`CarpetLevelMenu`、`CarpetGridGame` 启动时都会确保 BGM 存在并播放。
+- 菜单音乐开关现在会即时应用到 BGM，使用 `carpet-setting-sound` 控制音量/静音。
+- 开场视频的 `VideoPlayer.audioOutputMode` 改为 `None`，视频阶段不再播放视频自带音频。
+- 新增 `CarpetLevelFlow.ResetGameAndReturnToIntro()`，用于清空章节进度、重置关卡请求、BGM 从头播放并返回 Intro。
+- 菜单“重置游戏进度”和 Main 场景“重开”按钮现在都走完整重置流程。
+- 补充 `Assets/Resources/Menu/生成对话气泡*.png.meta`，避免 Unity 重新生成不稳定 GUID。

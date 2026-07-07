@@ -125,6 +125,7 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void Awake()
     {
+        CarpetBgmPlayer.EnsurePlaying();
         int requestedLevel = CarpetLevelFlow.ConsumeRequestedLevel();
         if (requestedLevel <= 0)
         {
@@ -280,6 +281,9 @@ public sealed class CarpetGridGame : MonoBehaviour
 
         RectTransform scroll = CreateBoardScroll(boardFrame);
         Stretch(scroll);
+
+        backRect.SetAsLastSibling();
+        restartRect.SetAsLastSibling();
     }
 
     private void BuildLevelTitleImages(RectTransform parent)
@@ -716,14 +720,7 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void RestartCurrentLevel()
     {
-        if (state.currentLevel > 0 && savedLevels.ContainsKey(state.currentLevel))
-        {
-            ApplyLevelData(savedLevels[state.currentLevel]);
-            SetToast("已重开当前关。");
-            return;
-        }
-
-        ResetPaintToCarpetPositions("已恢复为当前地毯所在格。");
+        CarpetLevelFlow.ResetGameAndReturnToIntro();
     }
 
     private LevelData SerializeLevel()

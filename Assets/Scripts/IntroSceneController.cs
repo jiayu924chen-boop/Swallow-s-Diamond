@@ -80,6 +80,7 @@ public sealed class IntroSceneController : MonoBehaviour
 
     private void Awake()
     {
+        CarpetBgmPlayer.EnsurePlaying();
         uiFont = LoadUiFont();
         config = LoadConfig();
         BuildUi();
@@ -254,7 +255,7 @@ public sealed class IntroSceneController : MonoBehaviour
         videoPlayer.source = VideoSource.Url;
         videoPlayer.url = Path.Combine(Application.streamingAssetsPath, string.IsNullOrEmpty(config.videoPath) ? DefaultVideoPath : config.videoPath).Replace("\\", "/");
         videoPlayer.renderMode = VideoRenderMode.RenderTexture;
-        videoPlayer.audioOutputMode = VideoAudioOutputMode.Direct;
+        videoPlayer.audioOutputMode = VideoAudioOutputMode.None;
         videoPlayer.prepareCompleted += HandleVideoPrepared;
         videoPlayer.loopPointReached += HandleVideoEnded;
 
