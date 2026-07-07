@@ -1,0 +1,46 @@
+{
+  "sceneBackground": "",
+  "boardBackground": "",
+  "boardCell": "Art/marble_board_cell.png",
+  "carpet": "Art/diamond_carpet.png",
+  "target": "",
+  "backIcon": "Art/icon_back_arrow.png",
+  "restartIcon": "Art/icon_restart_arrow.png",
+  "sceneBackgroundColor": "#f4f0e8",
+  "boardBackgroundColor": "#ffffff",
+  "emptyCellColor": "#ffffff",
+  "chapters": [
+    {
+      "chapterIndex": 1,
+      "levels": [1, 2],
+      "sceneBackground": "Art/chapter_1_background.png",
+      "sceneBackgroundColor": "#f4f0e8",
+      "boardBackgroundColor": "#ffffff",
+      "emptyCellColor": "#ffffff"
+    },
+    {
+      "chapterIndex": 2,
+      "levels": [3, 4],
+      "sceneBackground": "Art/chapter_2_background.png",
+      "sceneBackgroundColor": "#e8f1f4",
+      "boardBackgroundColor": "#f8fcff",
+      "emptyCellColor": "#ffffff"
+    },
+    {
+      "chapterIndex": 3,
+      "levels": [5, 6],
+      "sceneBackground": "Art/chapter_3_background.png",
+      "sceneBackgroundColor": "#eef2e6",
+      "boardBackgroundColor": "#fbfff7",
+      "emptyCellColor": "#ffffff"
+    },
+    {
+      "chapterIndex": 4,
+      "levels": [7, 10],
+      "sceneBackground": "Art/chapter_4_background.png",
+      "sceneBackgroundColor": "#f3e9ee",
+      "boardBackgroundColor": "#fff9fc",
+      "emptyCellColor": "#ffffff"
+    }
+  ]
+}

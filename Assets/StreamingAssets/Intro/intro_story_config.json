@@ -1,0 +1,39 @@
+{
+  "videoPath": "Intro/intro_video.mp4",
+  "logoResource": "Intro/swallows_diamond_logo",
+  "startButtonResource": "Intro/start_button",
+  "backgroundColor": "#000000",
+  "startButtonText": "\u5f00\u59cb\u6e38\u620f",
+  "startButtonColor": "#111111dd",
+  "storyOverlayAlpha": 0.78,
+  "storyFontSize": 48,
+  "storyLineHeight": 198,
+  "lineRevealSeconds": 9.5,
+  "storyHint": "\u70b9\u51fb\u7ee7\u7eed",
+  "finalStoryHint": "\u518d\u6b21\u70b9\u51fb\u5f00\u59cb",
+  "transitionLabel": "LOADING",
+  "transitionImageResource": "",
+  "transitionSeconds": 1.4,
+  "storyPages": [
+    {
+      "lines": [
+        "快乐王子曾经矗立在城市的一角。",
+        "他披着金箔，剑柄嵌着红宝石，双眼是比天空更澄澈的蓝宝石。",
+        "他看见病榻上发着高烧的男孩，看见寒夜里写不出结局的穷困剧作家，也看见街角蜷缩着、再也点不亮火柴的小女孩。",
+        "他将剑柄上的红宝石送往病房，将双眼中的蓝宝石送给需要希望的人们。",
+        "直到胸口那颗温柔而沉重的铅心，在漫长的寒冬里悄然碎裂。",
+        "后来，城市遗忘了他的光辉。只剩下一尊失去色彩的雕像，静静站在风里，像一个被春天错过的梦。"
+      ]
+    },
+    {
+      "lines": [
+        "直到某一日，远道而来的工匠雷梅黛丝踏入这座城市。",
+        "她听闻过快乐王子的故事，也见过那些因他而被拯救的人们留下的痕迹。",
+        "她相信，真正的光芒从不会因为宝石脱落而消失；只要还有人记得爱与给予，沉睡的心便仍有重新跳动的可能。",
+        "在这个明媚的春天，雷梅黛丝展开工具箱，拾起散落的金屑与旧日的回忆。",
+        "她要修复的，不只是一尊破损的雕像。",
+        "她要让那位曾为无数人带来笑容的王子，再一次迎着晨光醒来。"
+      ]
+    }
+  ]
+}

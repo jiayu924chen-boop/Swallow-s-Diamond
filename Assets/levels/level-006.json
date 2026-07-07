@@ -1,0 +1,50 @@
+{
+  "rows": 10,
+  "cols": 10,
+  "carpets": [
+    {
+      "id": 1,
+      "row": 2,
+      "col": 2,
+      "targetRow": 6,
+      "targetCol": 1,
+      "length": 8,
+      "color": "#e15d5d",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 2,
+      "row": 7,
+      "col": 2,
+      "targetRow": 8,
+      "targetCol": 6,
+      "length": 7,
+      "color": "#e15d5d",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 3,
+      "row": 7,
+      "col": 7,
+      "targetRow": 3,
+      "targetCol": 8,
+      "length": 6,
+      "color": "#e15d5d",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 4,
+      "row": 2,
+      "col": 7,
+      "targetRow": 1,
+      "targetCol": 3,
+      "length": 5,
+      "color": "#e15d5d",
+      "groupId": "",
+      "passColor": ""
+    }
+  ]
+}

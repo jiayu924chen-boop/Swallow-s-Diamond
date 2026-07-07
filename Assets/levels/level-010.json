@@ -1,0 +1,28 @@
+{
+  "rows": 5,
+  "cols": 5,
+  "carpets": [
+    {
+      "id": 1,
+      "row": 2,
+      "col": 0,
+      "targetRow": 2,
+      "targetCol": 4,
+      "length": 3,
+      "color": "#e15d5d",
+      "groupId": "",
+      "passColor": "#4b75d1"
+    },
+    {
+      "id": 2,
+      "row": 0,
+      "col": 2,
+      "targetRow": 4,
+      "targetCol": 2,
+      "length": 4,
+      "color": "#4b75d1",
+      "groupId": "",
+      "passColor": ""
+    }
+  ]
+}

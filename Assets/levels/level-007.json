@@ -1,0 +1,46 @@
+{
+  "rows": 6,
+  "cols": 4,
+  "carpets": [
+    {
+      "id": 1,
+      "row": 5,
+      "col": 0,
+      "targetRow": 0,
+      "targetCol": 0,
+      "length": 5,
+      "color": "#e15d5d",
+      "groupId": "1"
+    },
+    {
+      "id": 2,
+      "row": 5,
+      "col": 3,
+      "targetRow": 0,
+      "targetCol": 3,
+      "length": 5,
+      "color": "#e15d5d",
+      "groupId": "1"
+    },
+    {
+      "id": 3,
+      "row": 0,
+      "col": 1,
+      "targetRow": 5,
+      "targetCol": 1,
+      "length": 5,
+      "color": "#4b75d1",
+      "groupId": "2"
+    },
+    {
+      "id": 4,
+      "row": 0,
+      "col": 2,
+      "targetRow": 5,
+      "targetCol": 2,
+      "length": 5,
+      "color": "#4b75d1",
+      "groupId": "2"
+    }
+  ]
+}

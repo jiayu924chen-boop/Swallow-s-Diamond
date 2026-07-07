@@ -1,0 +1,72 @@
+{
+  "rows": 9,
+  "cols": 7,
+  "carpets": [
+    {
+      "id": 1,
+      "row": 0,
+      "col": 3,
+      "targetRow": 7,
+      "targetCol": 3,
+      "length": 7,
+      "color": "#e15d5d",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 2,
+      "row": 6,
+      "col": 5,
+      "targetRow": 2,
+      "targetCol": 5,
+      "length": 4,
+      "color": "#328f83",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 3,
+      "row": 7,
+      "col": 5,
+      "targetRow": 1,
+      "targetCol": 5,
+      "length": 8,
+      "color": "#8b63c7",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 4,
+      "row": 4,
+      "col": 2,
+      "targetRow": 4,
+      "targetCol": 4,
+      "length": 10,
+      "color": "#7b7d2b",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 5,
+      "row": 1,
+      "col": 1,
+      "targetRow": 7,
+      "targetCol": 1,
+      "length": 8,
+      "color": "#d4912d",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 6,
+      "row": 2,
+      "col": 1,
+      "targetRow": 6,
+      "targetCol": 1,
+      "length": 4,
+      "color": "#2f9d55",
+      "groupId": "",
+      "passColor": ""
+    }
+  ]
+}

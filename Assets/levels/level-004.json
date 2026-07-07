@@ -1,0 +1,24 @@
+{
+  "rows": 5,
+  "cols": 5,
+  "carpets": [
+    {
+      "id": 1,
+      "row": 0,
+      "col": 2,
+      "targetRow": 4,
+      "targetCol": 2,
+      "length": 4,
+      "color": "#d4912d"
+    },
+    {
+      "id": 2,
+      "row": 2,
+      "col": 0,
+      "targetRow": 2,
+      "targetCol": 4,
+      "length": 3,
+      "color": "#d4912d"
+    }
+  ]
+}

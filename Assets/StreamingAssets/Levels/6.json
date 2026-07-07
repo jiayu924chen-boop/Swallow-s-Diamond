@@ -1,0 +1,17 @@
+{
+  "rows": 5,
+  "cols": 5,
+  "carpets": [
+    {
+      "id": 1,
+      "row": 1,
+      "col": 1,
+      "targetRow": 3,
+      "targetCol": 1,
+      "length": 2,
+      "color": "#00a6a6",
+      "groupId": "",
+      "passColor": ""
+    }
+  ]
+}

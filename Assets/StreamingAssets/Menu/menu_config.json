@@ -1,0 +1,150 @@
+﻿{
+    "backgroundColor":  "#e9dfc7",
+    "backgroundImage":  "Menu/pixel-large-crt-1783320811299.png",
+    "buttons":  [
+                    {
+                        "label":  "章节一",
+                        "levels":  [
+                                       1,
+                                       2
+                                   ],
+                        "position":  {
+                                         "x":  0.0,
+                                         "y":  360.0
+                                     },
+                        "size":  {
+                                     "x":  560.0,
+                                     "y":  108.0
+                                 },
+                        "rotation":  0.0
+                    },
+                    {
+                        "label":  "章节二",
+                        "levels":  [
+                                       3,
+                                       4
+                                   ],
+                        "position":  {
+                                         "x":  0.0,
+                                         "y":  200.0
+                                     },
+                        "size":  {
+                                     "x":  560.0,
+                                     "y":  108.0
+                                 },
+                        "rotation":  0.0
+                    },
+                    {
+                        "label":  "章节三",
+                        "levels":  [
+                                       5,
+                                       6
+                                   ],
+                        "position":  {
+                                         "x":  0.0,
+                                         "y":  40.0
+                                     },
+                        "size":  {
+                                     "x":  560.0,
+                                     "y":  108.0
+                                 },
+                        "rotation":  0.0
+                    },
+                    {
+                        "label":  "章节四",
+                        "levels":  [
+                                       7,
+                                       10
+                                   ],
+                        "position":  {
+                                         "x":  0.0,
+                                         "y":  -120.0
+                                     },
+                        "size":  {
+                                     "x":  560.0,
+                                     "y":  108.0
+                                 },
+                        "rotation":  0.0
+                    }
+                ],
+    "decorations":  [
+                        {
+                            "id":  "warm-pixel-workbench",
+                            "image":  "Menu/workbench_pixel.png",
+                            "position":  {
+                                             "x":  250.76979064941407,
+                                             "y":  -778.448974609375
+                                         },
+                            "size":  {
+                                         "x":  564.239990234375,
+                                         "y":  374.9939880371094
+                                     },
+                            "rotation":  0.0,
+                            "color":  "#fff4dc",
+                            "shadow":  true,
+                            "shadowOffset":  {
+                                                 "x":  98.0,
+                                                 "y":  -120.0
+                                             },
+                            "shadowScale":  {
+                                                "x":  1.0499999523162842,
+                                                "y":  0.2199999988079071
+                                            },
+                            "shadowColor":  "#1f161c66",
+                            "animationFrames":  [
+
+                                                ],
+                            "animationDurations":  [
+
+                                                   ],
+                            "breathAmplitude":  6.0,
+                            "breathScale":  0.017999999225139619,
+                            "breathSeconds":  2.799999952316284,
+                            "frameFadeSeconds":  0
+                        },
+                        {
+                            "id":  "left-box-character-45",
+                            "image":  "Menu/menu_character_chibi_static_final.png",
+                            "position":  {
+                                             "x":  -316.5701904296875,
+                                             "y":  -713.935546875
+                                         },
+                            "size":  {
+                                         "x":  360.0,
+                                         "y":  460.26080322265627
+                                     },
+                            "rotation":  0.0,
+                            "color":  "#ffffff",
+                            "shadow":  false,
+                            "shadowOffset":  {
+                                                 "x":  0.0,
+                                                 "y":  0.0
+                                             },
+                            "shadowScale":  {
+                                                "x":  1.0,
+                                                "y":  1.0
+                                            },
+                            "shadowColor":  "#1a121466",
+                            "animationFrames":  [
+
+                                                ],
+                            "animationDurations":  [
+
+                                                   ],
+                            "triggerAnimationFolders":  [
+                                                            "Menu/animation/npc1_cutout",
+                                                            "Menu/animation/npc2_cutout",
+                                                            "Menu/animation/npc3_cutout"
+                                                        ],
+                            "triggerIntervalSeconds":  5.0,
+                            "triggerFrameSeconds":  0.05,
+                            "breathAmplitude":  2.5,
+                            "breathScale":  0.006,
+                            "breathSeconds":  3.4,
+                            "frameFadeSeconds":  0
+                        }
+                    ],
+    "animations":  [
+
+                   ]
+}
