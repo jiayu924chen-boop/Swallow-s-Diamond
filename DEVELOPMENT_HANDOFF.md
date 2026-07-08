@@ -616,3 +616,10 @@ Unity Editor > Tools > Carpet > Menu Layout Editor
 - 新增 `CarpetLevelFlow.ResetGameAndReturnToIntro()`，用于清空章节进度、重置关卡请求、BGM 从头播放并返回 Intro。
 - 菜单“重置游戏进度”和 Main 场景“重开”按钮现在都走完整重置流程。
 - 补充 `Assets/Resources/Menu/生成对话气泡*.png.meta`，避免 Unity 重新生成不稳定 GUID。
+### 2026-07-08 竖屏显示引导与窗口设置
+- 新增 `Assets/Scripts/ExperienceDisplayBootstrap.cs`，统一处理运行时显示环境：启动前将目标帧率固定为 `60`、移动端锁定竖屏、非移动端强制使用 `1080 x 1920` 窗口化分辨率。
+- `IntroSceneController`、`CarpetLevelMenu`、`CarpetGridGame` 的运行时 Canvas 缩放不再各自硬编码参考分辨率，改为统一调用 `ExperienceDisplayBootstrap.ConfigurePortraitCanvas()`，并在根节点挂载 `ExperiencePortraitFrame`，把实际可见 UI 框限制在 9:16 竖屏画幅内。
+- `ProjectSettings/ProjectSettings.asset` 同步改动：`defaultIsNativeResolution` 关闭，`fullscreenMode` 调整为 `Windowed`，避免桌面运行时被原生全屏分辨率拉伸，和新的显示引导脚本互相冲突。
+- 本次没有新增关卡、配置数据或美术资源，属于显示层行为和工程设置变更；接手时应优先关注所有动态生成 UI 是否仍按 `1080 x 1920` 参考尺寸布局，而不是只检查场景里的静态对象。
+- 建议验收方式：在 Windows 编辑器或桌面构建中从 `Intro.unity` 进入完整流程，确认窗口以竖屏比例启动；依次检查 Intro、章节菜单、Main 三个场景的内容都被限制在居中竖屏框内，未出现横向拉伸、超框点击区或黑边遮挡交互。
+- 接管风险：`ExperiencePortraitFrame` 通过运行时持续修正 `RectTransform` 尺寸，如果后续在根节点再叠加安全区适配、横屏模式或依赖全屏锚点的 UI，需先验证不会和该组件产生重复约束。
