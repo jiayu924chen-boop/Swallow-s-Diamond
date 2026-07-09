@@ -1,7 +1,7 @@
 {
   "sceneBackground": "",
   "boardBackground": "",
-  "boardCell": "DiamondPrefab/Sprites/carpet_background.png",
+  "boardCell": "DiamondPrefab/Sprites/carpet_background_.png",
   "carpet": "Art/diamond_carpet.png",
   "target": "",
   "backIcon": "Art/icon_back_arrow.png",

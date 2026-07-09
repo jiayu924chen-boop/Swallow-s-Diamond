@@ -2161,7 +2161,6 @@ public sealed class CarpetGridGame : MonoBehaviour
             view.Init(this, cell.row, cell.col);
             RenderTargetCornerTriangles(cellRect, cell.row, cell.col, size);
             RenderPathDiamond(cellRect, cell, size);
-            RenderPathOwnership(cellRect, cell, size);
 
             List<Carpet> cellCarpets = CarpetsAt(cell.row, cell.col);
             for (int i = 0; i < cellCarpets.Count; i++)
@@ -2264,7 +2263,16 @@ public sealed class CarpetGridGame : MonoBehaviour
         Center(diamond);
         float diamondSize = size * DiamondInsetScale;
         diamond.sizeDelta = new Vector2(diamondSize, diamondSize);
-        AddDiamondPrefabVisual(diamond, cell.color, cell.color, diamondSize, "", false, false, 0, 0, false, false);
+
+        Carpet owner = state.carpets.FirstOrDefault(c => c.id == cell.owner);
+        Vector2Int direction = owner != null ? GetCarpetDirection(owner) : new Vector2Int(0, 1);
+        Vector2Int pathDirection;
+        if (owner != null && TryGetPathDirection(owner, cell.row, cell.col, out pathDirection))
+        {
+            direction = pathDirection;
+        }
+
+        AddDiamondPrefabVisual(diamond, cell.color, cell.color, diamondSize, "", owner != null, owner != null && UsesSilverDirection(owner), direction.x, direction.y, false, false);
     }
 
     private void AddDiamondHighlight(RectTransform parent, float size)
