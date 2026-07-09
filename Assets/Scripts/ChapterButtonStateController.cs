@@ -64,8 +64,16 @@ public sealed class ChapterButtonStateController : MonoBehaviour
 
     public void PlayLockToUnlock()
     {
+        PlayLockToUnlock(true);
+    }
+
+    public void PlayLockToUnlock(bool showUnlockArrow)
+    {
         PlayTransition(ChapterButtonState.Unlock, LockToUnlockAnimation);
-        ShowUnlockArrow();
+        if (showUnlockArrow)
+        {
+            ShowUnlockArrow();
+        }
     }
 
     public void PlayUnlockToFinish()

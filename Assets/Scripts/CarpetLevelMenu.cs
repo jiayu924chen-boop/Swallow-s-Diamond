@@ -633,7 +633,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
             case ChapterState.Open:
                 if (transition == ChapterTransitionLockToUnlock)
                 {
-                    stateController.PlayLockToUnlock();
+                    stateController.PlayLockToUnlock(index < ChapterFiveIndex);
                 }
                 else
                 {
