@@ -1115,3 +1115,19 @@ Audio/perfect_beauty_bgm
 - 数据与资源变化：新增 `GuideDialogueConfig`、`GuideTextType`、`GuideLayerController` 脚本；新增 `Assets/Resource/GuideDialogue/StartGameDialogue.asset`、`LevelFoueEndDialogue.asset`；主界面新增菜单预制体、章节按钮预制体和 `output_jianing.png` 角色图；`Packages/manifest.json` 新增 `com.unity.2d.sprite` 依赖。
 - 验收方式：从 `Intro.unity` 进入 Play，走完整个开场流程，确认主界面首次加载时出现引导框且可点击关闭，再验证章节按钮、设置按钮和装饰图都已绑定成功。
 - 接手风险：引导系统目前只消费 `StartGame` 文案，其他枚举和结尾文案尚未接线；菜单脚本对预制体命名和层级有隐式依赖，UI 调整时必须回归验证。
+
+### 2026-07-09 Animation 包依赖同步（origin/main）
+
+- 模块影响：`Packages/manifest.json` 与 `Packages/packages-lock.json` 新增 `com.unity.2d.animation` 及其传递依赖，属于工程包层面的远端同步变更。
+- 行为变化：当前代码里还没有直接调用新的 Animation API，但 Unity 编辑器在打开项目时会多加载 2D Animation 相关程序集和内置模块，后续菜单帧动画或角色骨骼资源可以直接接入。
+- 数据与资源变化：远端提交 `1097fa7 feat: 新增animation包` 只改动 `Packages/manifest.json`、`Packages/packages-lock.json`，当前本地已同步到该包版本。
+- 验收方式：重新打开 Unity，确认 Package Manager 中存在 `2D Animation 9.2.2`，控制台没有缺失程序集或包解析错误。
+- 接手风险：本地分支当前落后远端 1 个提交；如果后续继续提交文档或玩法改动，需先同步该包依赖，避免不同开发机的 `Packages` 状态不一致。
+
+### 2026-07-09 钻石预制体渲染与方向标识调整（working tree）
+
+- 模块影响：`CarpetGridGame` 改为通过 `Resources/DiamondPrefab/DiamondPrefab` 渲染棋盘钻石与路径钻石；`Assets/Resources/DiamondPrefab/DiamondPrefab.prefab` 新增文本节点和方向装饰节点；新增 `Assets/Font/WhiteFillBlackOutlineText.shader`、`Assets/Font/WhiteFillBlackOutlineText.mat` 供数字描边显示。
+- 行为变化：棋盘上的钻石堆不再直接用代码画单层 `Image + Text`，而是实例化统一预制体；移动和撤销都会记录最近一次方向，渲染时显示金/银方向标识；同色双堆场景会根据 `HasSameColorPair()` 切到银色方向装饰，路径钻石也复用同一套预制体外观。
+- 数据与资源变化：`Carpet.hasMoveDirection`、`lastDirectionRow`、`lastDirectionCol` 三个运行时字段用于保存最近方向；字体材质和描边 Shader 目前还是未提交资源，若删除或改名，预制体文本会退化或丢失样式。
+- 验收方式：在 `Main.unity` 进入 Play，拖动任意钻石堆并执行一次撤销，确认钻石数字仍可见、方向标识会随最近移动方向旋转；再验证同色双堆关卡会显示银色方向装饰，路径菱形仍按占格颜色渲染。
+- 接手风险：该套渲染强依赖预制体内 `10_DiamondNormal`、`20_DiamondSmall`、`30_DirectionGold`、`31_DirectionSilver` 等子节点命名，以及字体材质路径；若美术继续改预制体层级，`FindChildRecursive()` 找不到节点时会静默退回旧 `Image` 样式，容易出现表现不一致但无明显报错。
