@@ -17,12 +17,21 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     private const string ConfigPath = "Menu/menu_config.json";
     private const string SettingsButtonIconPath = "Menu/icon_settings_gear.png";
     private const string ProgressKeyPrefix = "carpet-menu-progress-";
+    private const string ChapterStateKeyPrefix = "carpet-menu-chapter-state-";
+    private const string ChapterTransitionKeyPrefix = "carpet-menu-chapter-transition-";
     private const string FirstChapterUnlockedKey = "carpet-menu-first-chapter-unlocked";
     private const string SoundKey = "carpet-setting-sound";
     private const string SfxKey = "carpet-setting-sfx";
     private const string VibrationKey = "carpet-setting-vibration";
     private const int ChapterButtonCount = 5;
+    private const int ChapterStateLocked = 0;
+    private const int ChapterStateUnlocked = 1;
+    private const int ChapterStateFinished = 2;
+    private const int ChapterTransitionNone = 0;
+    private const int ChapterTransitionLockToUnlock = 1;
+    private const int ChapterTransitionUnlockToFinish = 2;
     private static readonly int[] buttonProgress = new int[ChapterButtonCount];
+    private static readonly int[] chapterUnlockStates = new int[ChapterButtonCount];
 
     [Header("Background")]
     public Sprite backgroundSprite;
@@ -119,6 +128,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         {
             buttonProgress[buttonIndex]++;
             SaveProgress();
+            RefreshChapterUnlockStates(true);
         }
     }
 
@@ -128,6 +138,9 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         {
             buttonProgress[i] = 0;
             PlayerPrefs.DeleteKey(ProgressKeyPrefix + i);
+            chapterUnlockStates[i] = ChapterStateLocked;
+            PlayerPrefs.SetInt(ChapterStateKeyPrefix + i, ChapterStateLocked);
+            PlayerPrefs.DeleteKey(ChapterTransitionKeyPrefix + i);
         }
         PlayerPrefs.DeleteKey(FirstChapterUnlockedKey);
         PlayerPrefs.Save();
@@ -304,7 +317,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() => StartConfiguredLevel(index));
             button.interactable = chapterState == ChapterState.Open;
-            ApplyChapterButtonState(button, chapterState);
+            ApplyChapterButtonState(button, index, chapterState);
 
             Text text = button.GetComponentInChildren<Text>(true);
             if (text != null)
@@ -326,7 +339,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         BindChapterButtons();
     }
 
-    private static void ApplyChapterButtonState(Button button, ChapterState chapterState)
+    private static void ApplyChapterButtonState(Button button, int index, ChapterState chapterState)
     {
         if (button == null)
         {
@@ -339,13 +352,28 @@ public sealed class CarpetLevelMenu : MonoBehaviour
             return;
         }
 
+        int transition = ConsumePendingChapterTransition(index);
         switch (chapterState)
         {
             case ChapterState.Open:
-                stateController.SetUnlockState();
+                if (transition == ChapterTransitionLockToUnlock)
+                {
+                    stateController.PlayLockToUnlock();
+                }
+                else
+                {
+                    stateController.SetUnlockState();
+                }
                 break;
             case ChapterState.Completed:
-                stateController.SetFinishState();
+                if (transition == ChapterTransitionUnlockToFinish)
+                {
+                    stateController.PlayUnlockToFinish();
+                }
+                else
+                {
+                    stateController.SetFinishState();
+                }
                 break;
             default:
                 stateController.SetLockState();
@@ -1053,28 +1081,20 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
     private ChapterState GetChapterState(int index)
     {
-        MenuButtonConfig config = GetButtonConfig(index);
-        int levelCount = config.levels == null ? 0 : config.levels.Count(level => level > 0);
-        if (levelCount <= 0)
-        {
-            return ChapterState.Completed;
-        }
         if (index < 0 || index >= buttonProgress.Length)
         {
             return ChapterState.Locked;
         }
-        if (buttonProgress[index] >= levelCount)
-        {
-            return ChapterState.Completed;
-        }
-        if (index == 0)
-        {
-            return IsFirstChapterUnlocked() ? ChapterState.Open : ChapterState.Locked;
-        }
 
-        MenuButtonConfig previousConfig = GetButtonConfig(index - 1);
-        int previousLevelCount = previousConfig.levels == null ? 0 : previousConfig.levels.Count(level => level > 0);
-        return buttonProgress[index - 1] >= previousLevelCount ? ChapterState.Open : ChapterState.Locked;
+        switch (Mathf.Clamp(chapterUnlockStates[index], ChapterStateLocked, ChapterStateFinished))
+        {
+            case ChapterStateUnlocked:
+                return ChapterState.Open;
+            case ChapterStateFinished:
+                return ChapterState.Completed;
+            default:
+                return ChapterState.Locked;
+        }
     }
 
     private static string BuildChapterLabel(MenuButtonConfig config, ChapterState chapterState)
@@ -1150,7 +1170,14 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         for (int i = 0; i < buttonProgress.Length; i++)
         {
             buttonProgress[i] = Mathf.Max(0, PlayerPrefs.GetInt(ProgressKeyPrefix + i, 0));
+            int savedState = PlayerPrefs.GetInt(ChapterStateKeyPrefix + i, -1);
+            chapterUnlockStates[i] = savedState >= 0
+                ? Mathf.Clamp(savedState, ChapterStateLocked, ChapterStateFinished)
+                : DeriveChapterUnlockState(i);
+            PlayerPrefs.SetInt(ChapterStateKeyPrefix + i, chapterUnlockStates[i]);
         }
+        RefreshChapterUnlockStates(false);
+        PlayerPrefs.Save();
     }
 
     private static void SaveProgress()
@@ -1162,14 +1189,97 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-    private static bool IsFirstChapterUnlocked()
+    private static int DeriveChapterUnlockState(int index)
     {
-        return PlayerPrefs.GetInt(FirstChapterUnlockedKey, 0) != 0;
+        if (index < 0 || index >= buttonProgress.Length)
+        {
+            return ChapterStateLocked;
+        }
+
+        int levelCount = GetConfiguredLevelCount(index);
+        if (levelCount <= 0 || buttonProgress[index] >= levelCount)
+        {
+            return ChapterStateFinished;
+        }
+        if (index == 0)
+        {
+            bool firstChapterUnlocked = PlayerPrefs.GetInt(FirstChapterUnlockedKey, 0) != 0 || chapterUnlockStates[index] >= ChapterStateUnlocked;
+            return firstChapterUnlocked ? ChapterStateUnlocked : ChapterStateLocked;
+        }
+
+        int previousLevelCount = GetConfiguredLevelCount(index - 1);
+        return previousLevelCount > 0 && buttonProgress[index - 1] >= previousLevelCount ? ChapterStateUnlocked : ChapterStateLocked;
+    }
+
+    private static int GetConfiguredLevelCount(int index)
+    {
+        CarpetLevelMenu menu = FindObjectOfType<CarpetLevelMenu>();
+        MenuButtonConfig config = menu != null ? menu.GetButtonConfig(index) : CreateDefaultButtonConfig(index);
+        return config.levels == null ? 0 : config.levels.Count(level => level > 0);
+    }
+
+    private static void RefreshChapterUnlockStates(bool markTransitions)
+    {
+        for (int i = 0; i < chapterUnlockStates.Length; i++)
+        {
+            SetChapterUnlockState(i, DeriveChapterUnlockState(i), markTransitions);
+        }
+        PlayerPrefs.Save();
+    }
+
+    private static void SetChapterUnlockState(int index, int state, bool markTransition)
+    {
+        if (index < 0 || index >= chapterUnlockStates.Length)
+        {
+            return;
+        }
+
+        int nextState = Mathf.Clamp(state, ChapterStateLocked, ChapterStateFinished);
+        int previousState = Mathf.Clamp(chapterUnlockStates[index], ChapterStateLocked, ChapterStateFinished);
+        if (previousState == nextState)
+        {
+            return;
+        }
+
+        chapterUnlockStates[index] = nextState;
+        PlayerPrefs.SetInt(ChapterStateKeyPrefix + index, nextState);
+
+        if (!markTransition)
+        {
+            return;
+        }
+
+        if (previousState == ChapterStateLocked && nextState == ChapterStateUnlocked)
+        {
+            PlayerPrefs.SetInt(ChapterTransitionKeyPrefix + index, ChapterTransitionLockToUnlock);
+        }
+        else if (previousState == ChapterStateUnlocked && nextState == ChapterStateFinished)
+        {
+            PlayerPrefs.SetInt(ChapterTransitionKeyPrefix + index, ChapterTransitionUnlockToFinish);
+        }
+    }
+
+    private static int ConsumePendingChapterTransition(int index)
+    {
+        if (index < 0 || index >= ChapterButtonCount)
+        {
+            return ChapterTransitionNone;
+        }
+
+        string key = ChapterTransitionKeyPrefix + index;
+        int transition = PlayerPrefs.GetInt(key, ChapterTransitionNone);
+        if (transition != ChapterTransitionNone)
+        {
+            PlayerPrefs.DeleteKey(key);
+            PlayerPrefs.Save();
+        }
+        return transition;
     }
 
     private static void UnlockFirstChapter()
     {
         PlayerPrefs.SetInt(FirstChapterUnlockedKey, 1);
+        SetChapterUnlockState(0, ChapterStateUnlocked, true);
         PlayerPrefs.Save();
     }
 

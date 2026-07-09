@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 940307102968817356}
   - component: {fileID: 1852053439039901998}
   - component: {fileID: 8312520801330344081}
+  - component: {fileID: 5438011972952149499}
   m_Layer: 0
   m_Name: ChapterButton
   m_TagString: Untagged
@@ -122,7 +123,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 0
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 2257814007456828254}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
@@ -162,6 +163,28 @@ MonoBehaviour:
   unlockState: {fileID: 3946445673379577599}
   finishState: {fileID: 8118235796932182056}
   currentState: 0
+  animator: {fileID: 5438011972952149499}
+--- !u!95 &5438011972952149499
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3762389816084434201}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 6d55515a0c0e47d4e8dcd9af4df745a5, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &3946445673379577599
 GameObject:
   m_ObjectHideFlags: 0
@@ -231,10 +254,10 @@ MonoBehaviour:
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
+  m_FillMethod: 1
+  m_FillAmount: 0
   m_FillClockwise: 1
-  m_FillOrigin: 0
+  m_FillOrigin: 1
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
 --- !u!1 &4849341272012286327
@@ -457,12 +480,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: d210c1d3ea03485aa925f1ced2b08ba6, type: 3}
-  m_Type: 0
+  m_Type: 3
   m_PreserveAspect: 1
   m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
+  m_FillMethod: 1
+  m_FillAmount: 0
   m_FillClockwise: 1
-  m_FillOrigin: 0
+  m_FillOrigin: 1
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
