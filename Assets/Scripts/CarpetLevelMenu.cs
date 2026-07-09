@@ -24,7 +24,6 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     private const string ChapterFiveStatueCompletedKey = "carpet-menu-chapter-five-statue-completed";
     private const string SwallowsEndingPendingKey = "carpet-menu-swallows-ending-pending";
     private const string SwallowsEndingCompletedKey = "carpet-menu-swallows-ending-completed";
-    private const string GuildPopupSaveKeyPrefix = "swallow-diamond-guild-popup-";
     private const string SoundKey = "carpet-setting-sound";
     private const string SfxKey = "carpet-setting-sfx";
     private const string VibrationKey = "carpet-setting-vibration";
@@ -193,10 +192,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         PlayerPrefs.DeleteKey(ChapterFiveStatueCompletedKey);
         PlayerPrefs.DeleteKey(SwallowsEndingPendingKey);
         PlayerPrefs.DeleteKey(SwallowsEndingCompletedKey);
-        for (int i = 1; i <= ChapterButtonCount; i++)
-        {
-            PlayerPrefs.DeleteKey(GuildPopupSaveKeyPrefix + i.ToString("00"));
-        }
+        GuildPopup.ResetConfirmedStates(ChapterButtonCount);
         PlayerPrefs.Save();
     }
 

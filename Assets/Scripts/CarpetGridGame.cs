@@ -15,7 +15,6 @@ public sealed class CarpetGridGame : MonoBehaviour
     private const string GameArtConfigPath = "Art/game_art_config.json";
     private const string BoardVisualConfigResourcePath = "Config/BoardVisualConfig";
     private const string GuildPopupResourceFolder = "Prefabs/Guild";
-    private const string GuildPopupSaveKeyPrefix = "swallow-diamond-guild-popup-";
     private const float DragStartThresholdPixels = 10f;
     private const float DragRetryInterval = 0.08f;
     private const float MoveAnimationDuration = 0.18f;
@@ -753,7 +752,7 @@ public sealed class CarpetGridGame : MonoBehaviour
             return;
         }
 
-        string saveKey = GuildPopupSaveKeyPrefix + popupIndex.ToString("00");
+        string saveKey = GuildPopup.SaveKeyForIndex(popupIndex);
         if (GuildPopup.HasConfirmed(saveKey))
         {
             return;

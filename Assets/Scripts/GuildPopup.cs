@@ -3,6 +3,8 @@ using UnityEngine.UI;
 
 public sealed class GuildPopup : MonoBehaviour
 {
+    private const string SaveKeyPrefix = "swallow-diamond-guild-popup-";
+
     [SerializeField] private Button confirmButton;
     [SerializeField] private string saveKey = "";
 
@@ -46,6 +48,19 @@ public sealed class GuildPopup : MonoBehaviour
     public static bool HasConfirmed(string key)
     {
         return !string.IsNullOrEmpty(key) && PlayerPrefs.GetInt(key, 0) != 0;
+    }
+
+    public static string SaveKeyForIndex(int index)
+    {
+        return index > 0 ? SaveKeyPrefix + index.ToString("00") : "";
+    }
+
+    public static void ResetConfirmedStates(int count)
+    {
+        for (int i = 1; i <= count; i++)
+        {
+            PlayerPrefs.DeleteKey(SaveKeyForIndex(i));
+        }
     }
 
     private void Confirm()
