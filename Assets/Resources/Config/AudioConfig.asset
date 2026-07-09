@@ -17,3 +17,15 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 6b194a4b91f94efa98e332624e858357, type: 3}
   - soundType: perfect_beauty_bgm
     clip: {fileID: 8300000, guid: 6b194a4b91f94efa98e332624e858357, type: 3}
+  - soundType: UI
+    clip: {fileID: 8300000, guid: cdd9768d4645de843b51fabb4c78602b, type: 3}
+  - soundType: win
+    clip: {fileID: 8300000, guid: 405d7a8cb76aa3d49aea1cce5992b82a, type: 3}
+  - soundType: target
+    clip: {fileID: 8300000, guid: bc1f26600663e3b49bd650065d89e1f3, type: 3}
+  - soundType: move
+    clip: {fileID: 8300000, guid: cb09a40e24764c24baffbdeef4dc93f4, type: 3}
+  - soundType: chapter
+    clip: {fileID: 8300000, guid: 930f91139b4665d4c80ab547b3e065fd, type: 3}
+  - soundType: start
+    clip: {fileID: 8300000, guid: cf83e83fa3516c74098cdb4200b3e521, type: 3}

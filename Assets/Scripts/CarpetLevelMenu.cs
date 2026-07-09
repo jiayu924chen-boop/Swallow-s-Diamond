@@ -144,6 +144,39 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         }
     }
 
+    public static bool CompleteButtonProgressAndTryGetNextLevel(int buttonIndex, out int nextLevel)
+    {
+        nextLevel = 0;
+        if (buttonIndex < 0 || buttonIndex >= buttonProgress.Length)
+        {
+            return false;
+        }
+
+        int[] levels = GetConfiguredLevels(buttonIndex);
+        if (levels.Length == 0)
+        {
+            return false;
+        }
+
+        int completedProgress = Mathf.Clamp(buttonProgress[buttonIndex], 0, levels.Length);
+        if (completedProgress < levels.Length)
+        {
+            completedProgress++;
+        }
+
+        buttonProgress[buttonIndex] = completedProgress;
+        SaveProgress();
+        RefreshChapterUnlockStates(true);
+
+        if (completedProgress >= levels.Length)
+        {
+            return false;
+        }
+
+        nextLevel = levels[completedProgress];
+        return nextLevel > 0;
+    }
+
     public static void ResetSavedProgress()
     {
         for (int i = 0; i < buttonProgress.Length; i++)
@@ -1459,9 +1492,14 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
     private static int GetConfiguredLevelCount(int index)
     {
+        return GetConfiguredLevels(index).Length;
+    }
+
+    private static int[] GetConfiguredLevels(int index)
+    {
         CarpetLevelMenu menu = instance != null ? instance : FindObjectOfType<CarpetLevelMenu>();
         MenuButtonConfig config = menu != null ? menu.GetButtonConfig(index) : CreateDefaultButtonConfig(index);
-        return config.levels == null ? 0 : config.levels.Count(level => level > 0);
+        return config.levels == null ? Array.Empty<int>() : config.levels.Where(level => level > 0).ToArray();
     }
 
     private static void RefreshChapterUnlockStates(bool markTransitions)
