@@ -24,6 +24,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     private const string ChapterFiveStatueCompletedKey = "carpet-menu-chapter-five-statue-completed";
     private const string SwallowsEndingPendingKey = "carpet-menu-swallows-ending-pending";
     private const string SwallowsEndingCompletedKey = "carpet-menu-swallows-ending-completed";
+    private const string GuildPopupSaveKeyPrefix = "swallow-diamond-guild-popup-";
     private const string SoundKey = "carpet-setting-sound";
     private const string SfxKey = "carpet-setting-sfx";
     private const string VibrationKey = "carpet-setting-vibration";
@@ -192,6 +193,10 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         PlayerPrefs.DeleteKey(ChapterFiveStatueCompletedKey);
         PlayerPrefs.DeleteKey(SwallowsEndingPendingKey);
         PlayerPrefs.DeleteKey(SwallowsEndingCompletedKey);
+        for (int i = 1; i <= ChapterButtonCount; i++)
+        {
+            PlayerPrefs.DeleteKey(GuildPopupSaveKeyPrefix + i.ToString("00"));
+        }
         PlayerPrefs.Save();
     }
 
@@ -1503,6 +1508,27 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         CarpetLevelMenu menu = instance != null ? instance : FindObjectOfType<CarpetLevelMenu>();
         MenuButtonConfig config = menu != null ? menu.GetButtonConfig(index) : CreateDefaultButtonConfig(index);
         return config.levels == null ? Array.Empty<int>() : config.levels.Where(level => level > 0).ToArray();
+    }
+
+    public static bool TryGetEntryChapterIndexForLevel(int level, out int chapterIndex)
+    {
+        chapterIndex = -1;
+        if (level <= 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < ChapterButtonCount; i++)
+        {
+            int[] levels = GetConfiguredLevels(i);
+            if (levels.Length > 0 && levels[0] == level)
+            {
+                chapterIndex = i;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void RefreshChapterUnlockStates(bool markTransitions)

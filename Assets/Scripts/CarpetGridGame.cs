@@ -788,19 +788,12 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private static int GuildPopupIndexForLevel(int level)
     {
-        switch (level)
+        if (CarpetLevelMenu.TryGetEntryChapterIndexForLevel(level, out int chapterIndex))
         {
-            case 1:
-                return 1;
-            case 4:
-                return 2;
-            case 7:
-                return 3;
-            case 10:
-                return 4;
-            default:
-                return 0;
+            return chapterIndex + 1;
         }
+
+        return 0;
     }
 
     private LevelData SerializeLevel()
@@ -1817,6 +1810,12 @@ public sealed class CarpetGridGame : MonoBehaviour
         }
 
         CellData target = GetCell(row, col);
+        Carpet borrowDependency = FindBorrowDependency(carpet, row, col);
+        if (borrowDependency != null)
+        {
+            return MoveInfo.Blocked("Another carpet is already borrowing this cell.");
+        }
+
         if (IsDifferentColorCell(target, carpet))
         {
             return MoveInfo.Blocked("异色地块无法覆盖。");
@@ -1840,9 +1839,19 @@ public sealed class CarpetGridGame : MonoBehaviour
         {
             MoveRecord lastMove = carpet.history[carpet.history.Count - 1];
             CellData current = GetCell(carpet.row, carpet.col);
-            CancelPathReveal(carpet.row, carpet.col, carpet.id);
-            current.color = lastMove.previousColor ?? "";
-            current.owner = lastMove.previousOwner;
+            if (lastMove.cost > 0 && current != null)
+            {
+                CancelPathReveal(carpet.row, carpet.col, carpet.id);
+                if (current.owner == carpet.id)
+                {
+                    current.color = lastMove.previousColor ?? "";
+                    current.owner = lastMove.previousOwner;
+                }
+                else
+                {
+                    Debug.LogWarning("Skipped restoring carpet cell because ownership changed during undo: " + carpet.id);
+                }
+            }
             QueueCarpetMotion(carpet.id, carpet.row, carpet.col, lastMove.fromRow, lastMove.fromCol, UndoMoveAnimationDuration);
             SetLastMoveDirection(carpet, lastMove.fromRow - carpet.row, lastMove.fromCol - carpet.col);
             carpet.row = lastMove.fromRow;
