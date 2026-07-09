@@ -32,6 +32,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     private const int ChapterTransitionUnlockToFinish = 2;
     private static readonly int[] buttonProgress = new int[ChapterButtonCount];
     private static readonly int[] chapterUnlockStates = new int[ChapterButtonCount];
+    private static CarpetLevelMenu instance;
 
     [Header("Background")]
     public Sprite backgroundSprite;
@@ -146,8 +147,20 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    public static void RefreshMenuState()
+    {
+        if (instance == null)
+        {
+            return;
+        }
+
+        LoadProgress();
+        instance.BindChapterButtons();
+    }
+
     private void Awake()
     {
+        instance = this;
         CarpetBgmPlayer.EnsurePlaying();
         uiFont = LoadUiFont();
         ApplyJsonConfig();
@@ -178,6 +191,11 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (instance == this)
+        {
+            instance = null;
+        }
+
         GuideLayerController guideLayer = GetComponentInChildren<GuideLayerController>(true);
         if (guideLayer != null)
         {
@@ -1213,7 +1231,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
     private static int GetConfiguredLevelCount(int index)
     {
-        CarpetLevelMenu menu = FindObjectOfType<CarpetLevelMenu>();
+        CarpetLevelMenu menu = instance != null ? instance : FindObjectOfType<CarpetLevelMenu>();
         MenuButtonConfig config = menu != null ? menu.GetButtonConfig(index) : CreateDefaultButtonConfig(index);
         return config.levels == null ? 0 : config.levels.Count(level => level > 0);
     }

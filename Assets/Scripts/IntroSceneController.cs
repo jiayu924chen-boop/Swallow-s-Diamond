@@ -449,7 +449,7 @@ public sealed class IntroSceneController : MonoBehaviour
         }
 
         CarpetLevelFlow.RequestMenuGuide(GuideTextType.StartGame);
-        SceneManager.LoadScene(CarpetLevelFlow.MenuSceneName, LoadSceneMode.Single);
+        CarpetLevelFlow.EnterMenuFromIntro();
     }
 
     private IntroStoryPage GetCurrentPage()

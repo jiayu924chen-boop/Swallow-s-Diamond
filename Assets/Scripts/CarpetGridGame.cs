@@ -94,6 +94,7 @@ public sealed class CarpetGridGame : MonoBehaviour
     {
         if (scene.name == CarpetLevelFlow.GameSceneName)
         {
+            SceneManager.SetActiveScene(scene);
             EnsureGameExists();
         }
     }
