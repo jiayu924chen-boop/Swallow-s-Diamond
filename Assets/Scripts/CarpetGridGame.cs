@@ -1812,7 +1812,7 @@ public sealed class CarpetGridGame : MonoBehaviour
             {
                 continue;
             }
-            if (IsAtTarget(carpet))
+            if (IsAtAnySameColorTarget(carpet))
             {
                 completed.Add(carpet);
             }
@@ -1844,7 +1844,9 @@ public sealed class CarpetGridGame : MonoBehaviour
     private void RefreshVictory(bool announce)
     {
         List<Carpet> playable = state.carpets.Where(c => c.alive).ToList();
-        bool won = playable.Count > 0 && playable.All(c => c.length <= 0 && IsAtTarget(c));
+        bool won = playable.Count > 0 &&
+            playable.All(c => c.length <= 0 && IsAtAnySameColorTarget(c)) &&
+            OccupiesDistinctTargetCells(playable);
         if (won && announce && !state.victory)
         {
             SetToast("胜利！所有地毯都铺到目标了。");
@@ -1911,9 +1913,28 @@ public sealed class CarpetGridGame : MonoBehaviour
             !IsPassColorCell(cell, carpet);
     }
 
-    private bool IsAtTarget(Carpet carpet)
+    private bool IsAtAnySameColorTarget(Carpet carpet)
     {
-        return carpet.row == carpet.targetRow && carpet.col == carpet.targetCol;
+        return carpet != null &&
+            state.carpets.Any(target =>
+                target.alive &&
+                target.color == carpet.color &&
+                carpet.row == target.targetRow &&
+                carpet.col == target.targetCol);
+    }
+
+    private static bool OccupiesDistinctTargetCells(IEnumerable<Carpet> carpets)
+    {
+        HashSet<string> occupiedTargets = new HashSet<string>();
+        foreach (Carpet carpet in carpets)
+        {
+            string key = carpet.color + "|" + carpet.row + "|" + carpet.col;
+            if (!occupiedTargets.Add(key))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private Carpet GetActiveCarpet()
@@ -2070,7 +2091,7 @@ public sealed class CarpetGridGame : MonoBehaviour
     {
         int painted = state.cells.Count(c => !string.IsNullOrEmpty(c.color));
         int carpets = state.carpets.Count(c => c.alive);
-        int unfinished = state.carpets.Count(c => c.alive && !(c.length <= 0 && IsAtTarget(c)));
+        int unfinished = state.carpets.Count(c => c.alive && !(c.length <= 0 && IsAtAnySameColorTarget(c)));
         if (modeTitle != null) modeTitle.text = "关卡模式";
         if (activeHint != null) activeHint.text = state.victory ? "已通关" : (state.cells.Count == 0 ? "未载入关卡" : "剩余目标 " + unfinished);
         if (boardInfo != null) boardInfo.text = state.cells.Count == 0 ? "棋盘未载入" : state.cols + " x " + state.rows + " | 当前关卡 " + (state.currentLevel > 0 ? state.currentLevel.ToString() : "未载入");
