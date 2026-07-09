@@ -23,7 +23,7 @@ public sealed class GuideLayerController : MonoBehaviour
         HideGuide();
     }
 
-    public void StartGuide(GuideTextType guideType)
+    public bool StartGuide(GuideTextType guideType)
     {
         ResolveBindings();
         activeGuideType = guideType;
@@ -34,7 +34,7 @@ public sealed class GuideLayerController : MonoBehaviour
         {
             Debug.LogWarning("Guide dialogue is missing or empty: " + guideType);
             HideGuide();
-            return;
+            return false;
         }
 
         if (guideBox != null)
@@ -51,6 +51,25 @@ public sealed class GuideLayerController : MonoBehaviour
         }
 
         UpdateGuideText();
+        return true;
+    }
+
+    public void ShowMaskOnly()
+    {
+        ResolveBindings();
+        if (mask != null)
+        {
+            mask.SetActive(true);
+        }
+    }
+
+    public void HideMaskOnly()
+    {
+        ResolveBindings();
+        if (mask != null && (guideBox == null || !guideBox.activeSelf))
+        {
+            mask.SetActive(false);
+        }
     }
 
     private void ShowNextLine()

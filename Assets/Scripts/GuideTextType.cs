@@ -6,5 +6,6 @@ public enum GuideTextType
     ChapterThreeUnlocked,
     ChapterFourUnlocked,
     ChapterFiveUnlocked,
-    GameEnding
+    GameEnding,
+    LevelFourEndDialogue
 }

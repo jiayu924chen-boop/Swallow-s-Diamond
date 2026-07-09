@@ -132,7 +132,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -290,6 +290,7 @@ GameObject:
   - component: {fileID: 5814215539304529476}
   - component: {fileID: 5820468899816128979}
   - component: {fileID: 2175071428454389039}
+  - component: {fileID: 4896465077415599830}
   m_Layer: 0
   m_Name: MainCharacter
   m_TagString: Untagged
@@ -355,6 +356,27 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!95 &4896465077415599830
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630618424370221091}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: b6f3423b56d5cc14595f3a29f61ed1dd, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1104412350213938599
 GameObject:
   m_ObjectHideFlags: 0
@@ -457,7 +479,7 @@ MonoBehaviour:
   dialogues:
   - guideType: 0
     dialogue: {fileID: 11400000, guid: 4073b21a68575f54e9f024613b69bb3c, type: 2}
-  - guideType: 4
+  - guideType: 7
     dialogue: {fileID: 11400000, guid: ed01719e8ec10a744a71cec3114a5ceb, type: 2}
 --- !u!1 &1200669830464039218
 GameObject:
@@ -693,7 +715,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -790,7 +812,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -849,7 +871,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -981,6 +1003,7 @@ MonoBehaviour:
   coverBackgroundImage: {fileID: 0}
   mainCharacterImage: {fileID: 2175071428454389039}
   workbenchImage: {fileID: 0}
+  statueNewObject: {fileID: 1433261863781720639}
 --- !u!1 &1827642878268731626
 GameObject:
   m_ObjectHideFlags: 0
@@ -1271,7 +1294,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -1738,7 +1761,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -1873,7 +1896,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -2772,7 +2795,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -3137,14 +3160,14 @@ PrefabInstance:
     - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: d124dc5cd06595e488a117cb29861556, type: 3}
+      objectReference: {fileID: 21300000, guid: 1ff197bf5bfdbb248b0b1cde6e1276f0, type: 3}
     - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_Color.b
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_Color.g
-      value: 0.6857143
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_Color.r
@@ -3732,11 +3755,23 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 460121714232477398, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 179
+      value: 232
       objectReference: {fileID: 0}
     - target: {fileID: 460121714232477398, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 281.9
+      value: 328
+      objectReference: {fileID: 0}
+    - target: {fileID: 460121714232477398, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.78
+      objectReference: {fileID: 0}
+    - target: {fileID: 460121714232477398, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.78
+      objectReference: {fileID: 0}
+    - target: {fileID: 460121714232477398, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.78
       objectReference: {fileID: 0}
     - target: {fileID: 460121714232477398, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -3745,6 +3780,10 @@ PrefabInstance:
     - target: {fileID: 460121714232477398, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 460121714232477398, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 657229011514020336, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_SizeDelta.x
@@ -3777,7 +3816,19 @@ PrefabInstance:
     - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 8c8dc2c6130416b4db1d15093e3df3a2, type: 3}
+      objectReference: {fileID: 21300000, guid: ef6e261b7e175b14c9346fd21f47edd2, type: 3}
+    - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3762389816084434201, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_Name
       value: ChapterButton4
@@ -3989,7 +4040,7 @@ PrefabInstance:
     - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: edf1c8a3c2f875448b08cea9868fe37b, type: 3}
+      objectReference: {fileID: 21300000, guid: 8b736c6cf151aab418421455fc6596aa, type: 3}
     - target: {fileID: 3762389816084434201, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_Name
       value: ChapterButton3

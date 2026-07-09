@@ -20,10 +20,14 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     private const string ChapterStateKeyPrefix = "carpet-menu-chapter-state-";
     private const string ChapterTransitionKeyPrefix = "carpet-menu-chapter-transition-";
     private const string FirstChapterUnlockedKey = "carpet-menu-first-chapter-unlocked";
+    private const string ChapterFiveStatuePendingKey = "carpet-menu-chapter-five-statue-pending";
+    private const string ChapterFiveStatueCompletedKey = "carpet-menu-chapter-five-statue-completed";
     private const string SoundKey = "carpet-setting-sound";
     private const string SfxKey = "carpet-setting-sfx";
     private const string VibrationKey = "carpet-setting-vibration";
     private const int ChapterButtonCount = 5;
+    private const int ChapterFourIndex = 3;
+    private const int ChapterFiveIndex = 4;
     private const int ChapterStateLocked = 0;
     private const int ChapterStateUnlocked = 1;
     private const int ChapterStateFinished = 2;
@@ -67,10 +71,13 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     [SerializeField] private Image coverBackgroundImage;
     [SerializeField] private Image mainCharacterImage;
     [SerializeField] private Image workbenchImage;
+    [SerializeField] private GameObject statueNewObject;
 
     private Font uiFont;
     private MenuDecorationConfig[] decorationConfigs = Array.Empty<MenuDecorationConfig>();
     private MenuAnimationConfig[] animationConfigs = Array.Empty<MenuAnimationConfig>();
+    private bool chapterFiveStatuePlaying;
+    private bool chapterFiveUnlockDialoguePlaying;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RegisterSceneLoaded()
@@ -144,6 +151,8 @@ public sealed class CarpetLevelMenu : MonoBehaviour
             PlayerPrefs.DeleteKey(ChapterTransitionKeyPrefix + i);
         }
         PlayerPrefs.DeleteKey(FirstChapterUnlockedKey);
+        PlayerPrefs.DeleteKey(ChapterFiveStatuePendingKey);
+        PlayerPrefs.DeleteKey(ChapterFiveStatueCompletedKey);
         PlayerPrefs.Save();
     }
 
@@ -179,6 +188,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
         LoadProgress();
         instance.BindChapterButtons();
+        instance.TryStartChapterFiveStatueGate();
     }
 
     private void Awake()
@@ -197,6 +207,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     {
         if (!CarpetLevelFlow.TryConsumePendingMenuGuide(out GuideTextType guideType))
         {
+            TryStartChapterFiveStatueGate();
             return;
         }
 
@@ -303,6 +314,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         coverBackgroundImage = coverBackgroundImage != null ? coverBackgroundImage : FindImage("MenuBackgroundImage");
         mainCharacterImage = mainCharacterImage != null ? mainCharacterImage : FindImage("MainCharacter");
         workbenchImage = workbenchImage != null ? workbenchImage : FindImage("workbench");
+        statueNewObject = statueNewObject != null ? statueNewObject : FindChildRecursive(transform, "Statue_new", "StatueNew")?.gameObject;
 
         ApplyExistingBackground();
         BindChapterButtons();
@@ -371,12 +383,124 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
     private void HandleGuideCompleted(GuideTextType guideType)
     {
+        if (guideType == GuideTextType.LevelFourEndDialogue)
+        {
+            chapterFiveUnlockDialoguePlaying = false;
+            return;
+        }
+
         if (guideType != GuideTextType.StartGame)
         {
+            TryStartChapterFiveStatueGate();
             return;
         }
 
         UnlockFirstChapter();
+        BindChapterButtons();
+        TryStartChapterFiveStatueGate();
+    }
+
+    private void TryStartChapterFiveStatueGate()
+    {
+        if (chapterFiveStatuePlaying || !IsChapterFiveStatuePending())
+        {
+            return;
+        }
+
+        if (statueNewObject == null)
+        {
+            statueNewObject = FindChildRecursive(transform, "Statue_new", "StatueNew")?.gameObject;
+        }
+        if (statueNewObject == null)
+        {
+            Debug.LogWarning("CarpetLevelMenu Statue_new object is missing; unlocking chapter five without statue animation.");
+            CompleteChapterFiveStatueGate();
+            return;
+        }
+
+        chapterFiveStatuePlaying = true;
+        statueNewObject.SetActive(true);
+
+        Image statueImage = statueNewObject.GetComponent<Image>();
+        if (statueImage != null)
+        {
+            statueImage.fillAmount = 0f;
+        }
+
+        GuideLayerController guideLayer = GetComponentInChildren<GuideLayerController>(true);
+        if (guideLayer != null)
+        {
+            guideLayer.ShowMaskOnly();
+        }
+
+        StatueNewAnimationCallback callback = statueNewObject.GetComponent<StatueNewAnimationCallback>();
+        if (callback == null)
+        {
+            callback = statueNewObject.AddComponent<StatueNewAnimationCallback>();
+        }
+        callback.Bind(this);
+
+        Animator animator = statueNewObject.GetComponent<Animator>();
+        if (animator == null)
+        {
+            Debug.LogWarning("CarpetLevelMenu Statue_new animator is missing; unlocking chapter five without statue animation.");
+            CompleteChapterFiveStatueGate();
+            return;
+        }
+
+        animator.Play("StatueNew", 0, 0f);
+    }
+
+    public void CompleteChapterFiveStatueGate()
+    {
+        chapterFiveStatuePlaying = false;
+        UnlockChapterFiveAfterStatueGate();
+        StartChapterFiveUnlockDialogue();
+    }
+
+    private void StartChapterFiveUnlockDialogue()
+    {
+        if (chapterFiveUnlockDialoguePlaying)
+        {
+            return;
+        }
+
+        GuideLayerController guideLayer = GetComponentInChildren<GuideLayerController>(true);
+        if (guideLayer == null)
+        {
+            Debug.LogWarning("CarpetLevelMenu guide layer is missing; unlocking chapter five without level four end dialogue.");
+            UnlockChapterFiveAfterStatueGate();
+            return;
+        }
+
+        chapterFiveUnlockDialoguePlaying = true;
+        guideLayer.GuideCompleted -= HandleGuideCompleted;
+        guideLayer.GuideCompleted += HandleGuideCompleted;
+        if (!guideLayer.StartGuide(GuideTextType.LevelFourEndDialogue))
+        {
+            chapterFiveUnlockDialoguePlaying = false;
+            UnlockChapterFiveAfterStatueGate();
+        }
+    }
+
+    private void UnlockChapterFiveAfterStatueGate()
+    {
+        if (!IsChapterFiveStatuePending() && IsChapterFiveStatueCompleted())
+        {
+            return;
+        }
+
+        PlayerPrefs.SetInt(ChapterFiveStatuePendingKey, 0);
+        PlayerPrefs.SetInt(ChapterFiveStatueCompletedKey, 1);
+        PlayerPrefs.Save();
+
+        GuideLayerController guideLayer = GetComponentInChildren<GuideLayerController>(true);
+        if (guideLayer != null)
+        {
+            guideLayer.HideMaskOnly();
+        }
+
+        RefreshChapterUnlockStates(true);
         BindChapterButtons();
     }
 
@@ -1217,6 +1341,11 @@ public sealed class CarpetLevelMenu : MonoBehaviour
                 : DeriveChapterUnlockState(i);
             PlayerPrefs.SetInt(ChapterStateKeyPrefix + i, chapterUnlockStates[i]);
         }
+        if (chapterUnlockStates.Length > ChapterFiveIndex && chapterUnlockStates[ChapterFiveIndex] >= ChapterStateUnlocked)
+        {
+            PlayerPrefs.SetInt(ChapterFiveStatueCompletedKey, 1);
+            PlayerPrefs.SetInt(ChapterFiveStatuePendingKey, 0);
+        }
         RefreshChapterUnlockStates(false);
         PlayerPrefs.Save();
     }
@@ -1249,6 +1378,10 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         }
 
         int previousLevelCount = GetConfiguredLevelCount(index - 1);
+        if (index == ChapterFiveIndex && previousLevelCount > 0 && buttonProgress[index - 1] >= previousLevelCount && !IsChapterFiveStatueCompleted())
+        {
+            return ChapterStateLocked;
+        }
         return previousLevelCount > 0 && buttonProgress[index - 1] >= previousLevelCount ? ChapterStateUnlocked : ChapterStateLocked;
     }
 
@@ -1261,11 +1394,43 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
     private static void RefreshChapterUnlockStates(bool markTransitions)
     {
+        MarkChapterFiveStatuePendingIfNeeded();
         for (int i = 0; i < chapterUnlockStates.Length; i++)
         {
             SetChapterUnlockState(i, DeriveChapterUnlockState(i), markTransitions);
         }
         PlayerPrefs.Save();
+    }
+
+    private static void MarkChapterFiveStatuePendingIfNeeded()
+    {
+        if (ChapterFiveIndex >= chapterUnlockStates.Length || IsChapterFiveStatueCompleted())
+        {
+            return;
+        }
+
+        int chapterFourLevelCount = GetConfiguredLevelCount(ChapterFourIndex);
+        if (chapterFourLevelCount <= 0 || buttonProgress[ChapterFourIndex] < chapterFourLevelCount)
+        {
+            return;
+        }
+
+        if (chapterUnlockStates[ChapterFiveIndex] >= ChapterStateUnlocked)
+        {
+            return;
+        }
+
+        PlayerPrefs.SetInt(ChapterFiveStatuePendingKey, 1);
+    }
+
+    private static bool IsChapterFiveStatuePending()
+    {
+        return PlayerPrefs.GetInt(ChapterFiveStatuePendingKey, 0) != 0;
+    }
+
+    private static bool IsChapterFiveStatueCompleted()
+    {
+        return PlayerPrefs.GetInt(ChapterFiveStatueCompletedKey, 0) != 0;
     }
 
     private static void SetChapterUnlockState(int index, int state, bool markTransition)
@@ -1506,6 +1671,28 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         Locked,
         Open,
         Completed
+    }
+}
+
+public sealed class StatueNewAnimationCallback : MonoBehaviour
+{
+    private CarpetLevelMenu menu;
+
+    public void Bind(CarpetLevelMenu owner)
+    {
+        menu = owner;
+    }
+
+    public void OnStatueNewAnimationFinished()
+    {
+        if (menu == null)
+        {
+            menu = GetComponentInParent<CarpetLevelMenu>();
+        }
+        if (menu != null)
+        {
+            menu.CompleteChapterFiveStatueGate();
+        }
     }
 }
 
