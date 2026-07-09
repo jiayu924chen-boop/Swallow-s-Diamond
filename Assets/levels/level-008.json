@@ -54,7 +54,7 @@
       "targetCol": 0,
       "length": 6,
       "color": "#4b75d1",
-      "groupId": "",
+      "groupId": "3",
       "passColor": ""
     },
     {
@@ -65,7 +65,7 @@
       "targetCol": 3,
       "length": 6,
       "color": "#4b75d1",
-      "groupId": "",
+      "groupId": "3",
       "passColor": ""
     },
     {
@@ -76,7 +76,7 @@
       "targetCol": 2,
       "length": 6,
       "color": "#8b63c7",
-      "groupId": "",
+      "groupId": "4",
       "passColor": ""
     },
     {
@@ -87,7 +87,7 @@
       "targetCol": 5,
       "length": 6,
       "color": "#8b63c7",
-      "groupId": "",
+      "groupId": "4",
       "passColor": ""
     }
   ]

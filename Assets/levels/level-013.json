@@ -8,7 +8,7 @@
       "col": 3,
       "targetRow": 10,
       "targetCol": 8,
-      "length": 6,
+      "length": 5,
       "color": "#4b75d1",
       "groupId": "1",
       "passColor": ""
@@ -19,7 +19,7 @@
       "col": 4,
       "targetRow": 9,
       "targetCol": 9,
-      "length": 6,
+      "length": 5,
       "color": "#4b75d1",
       "groupId": "1",
       "passColor": ""
@@ -30,7 +30,7 @@
       "col": 5,
       "targetRow": 8,
       "targetCol": 10,
-      "length": 6,
+      "length": 5,
       "color": "#4b75d1",
       "groupId": "1",
       "passColor": ""
@@ -76,7 +76,7 @@
       "targetCol": 10,
       "length": 2,
       "color": "#4b75d1",
-      "groupId": "",
+      "groupId": "4",
       "passColor": ""
     },
     {
@@ -84,21 +84,21 @@
       "row": 6,
       "col": 3,
       "targetRow": 6,
-      "targetCol": 4,
+      "targetCol": 2,
       "length": 1,
       "color": "#4b75d1",
-      "groupId": "",
+      "groupId": "3",
       "passColor": ""
     },
     {
       "id": 9,
       "row": 7,
       "col": 4,
-      "targetRow": 6,
-      "targetCol": 5,
+      "targetRow": 7,
+      "targetCol": 3,
       "length": 1,
       "color": "#4b75d1",
-      "groupId": "",
+      "groupId": "3",
       "passColor": ""
     },
     {
@@ -109,7 +109,18 @@
       "targetCol": 5,
       "length": 2,
       "color": "#4b75d1",
-      "groupId": "",
+      "groupId": "4",
+      "passColor": ""
+    },
+    {
+      "id": 11,
+      "row": 5,
+      "col": 4,
+      "targetRow": 5,
+      "targetCol": 6,
+      "length": 2,
+      "color": "#4b75d1",
+      "groupId": "4",
       "passColor": ""
     }
   ]
