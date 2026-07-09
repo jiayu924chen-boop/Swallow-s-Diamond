@@ -13,6 +13,7 @@ public sealed class CarpetGridGame : MonoBehaviour
     private const string SaveKey = "carpet-grid-unity-levels-v1";
     private const string LevelFolderName = "levels";
     private const string GameArtConfigPath = "Art/game_art_config.json";
+    private const string BoardVisualConfigResourcePath = "Config/BoardVisualConfig";
     private const float DragStartThresholdPixels = 10f;
     private const float DragStepInterval = 0.055f;
     private const float MoveAnimationDuration = 0.13f;
@@ -932,6 +933,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         string path = Path.Combine(Application.streamingAssetsPath, GameArtConfigPath);
         if (!File.Exists(path))
         {
+            ApplyBoardVisualConfig();
             return;
         }
 
@@ -949,10 +951,12 @@ public sealed class CarpetGridGame : MonoBehaviour
             {
                 ApplyChapterArtConfig(chapterConfig);
             }
+            ApplyBoardVisualConfig();
         }
         catch (Exception exception)
         {
             Debug.LogWarning("Failed to read game art config: " + exception.Message);
+            ApplyBoardVisualConfig();
         }
     }
 
@@ -986,6 +990,33 @@ public sealed class CarpetGridGame : MonoBehaviour
         boardBackgroundColor = ParseColor(config.boardBackgroundColor, boardBackgroundColor);
         emptyCellColor = ParseColor(config.emptyCellColor, emptyCellColor);
         proceduralBoardCellSprites.Clear();
+    }
+
+    private void ApplyBoardVisualConfig()
+    {
+        BoardVisualConfig config = Resources.Load<BoardVisualConfig>(BoardVisualConfigResourcePath);
+        if (config == null)
+        {
+            return;
+        }
+
+        if (config.overrideBoardBackgroundColor)
+        {
+            boardBackgroundColor = config.boardBackgroundColor;
+        }
+        if (config.boardBackgroundSprite != null)
+        {
+            boardBackgroundSprite = config.boardBackgroundSprite;
+        }
+        if (config.boardCellSprite != null)
+        {
+            boardCellSprite = config.boardCellSprite;
+            proceduralBoardCellSprites.Clear();
+        }
+        if (config.overrideCellTint)
+        {
+            emptyCellColor = config.cellTint;
+        }
     }
 
     private void LoadLevelDisplaySprites()
