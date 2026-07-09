@@ -22,6 +22,8 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     private const string FirstChapterUnlockedKey = "carpet-menu-first-chapter-unlocked";
     private const string ChapterFiveStatuePendingKey = "carpet-menu-chapter-five-statue-pending";
     private const string ChapterFiveStatueCompletedKey = "carpet-menu-chapter-five-statue-completed";
+    private const string SwallowsEndingPendingKey = "carpet-menu-swallows-ending-pending";
+    private const string SwallowsEndingCompletedKey = "carpet-menu-swallows-ending-completed";
     private const string SoundKey = "carpet-setting-sound";
     private const string SfxKey = "carpet-setting-sfx";
     private const string VibrationKey = "carpet-setting-vibration";
@@ -72,12 +74,14 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     [SerializeField] private Image mainCharacterImage;
     [SerializeField] private Image workbenchImage;
     [SerializeField] private GameObject statueNewObject;
+    [SerializeField] private GameObject swallowsObject;
 
     private Font uiFont;
     private MenuDecorationConfig[] decorationConfigs = Array.Empty<MenuDecorationConfig>();
     private MenuAnimationConfig[] animationConfigs = Array.Empty<MenuAnimationConfig>();
     private bool chapterFiveStatuePlaying;
     private bool chapterFiveUnlockDialoguePlaying;
+    private bool swallowsEndingPlaying;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RegisterSceneLoaded()
@@ -153,6 +157,8 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         PlayerPrefs.DeleteKey(FirstChapterUnlockedKey);
         PlayerPrefs.DeleteKey(ChapterFiveStatuePendingKey);
         PlayerPrefs.DeleteKey(ChapterFiveStatueCompletedKey);
+        PlayerPrefs.DeleteKey(SwallowsEndingPendingKey);
+        PlayerPrefs.DeleteKey(SwallowsEndingCompletedKey);
         PlayerPrefs.Save();
     }
 
@@ -189,6 +195,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         LoadProgress();
         instance.BindChapterButtons();
         instance.TryStartChapterFiveStatueGate();
+        instance.TryStartSwallowsEndingGate();
     }
 
     private void Awake()
@@ -208,6 +215,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         if (!CarpetLevelFlow.TryConsumePendingMenuGuide(out GuideTextType guideType))
         {
             TryStartChapterFiveStatueGate();
+            TryStartSwallowsEndingGate();
             return;
         }
 
@@ -315,6 +323,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         mainCharacterImage = mainCharacterImage != null ? mainCharacterImage : FindImage("MainCharacter");
         workbenchImage = workbenchImage != null ? workbenchImage : FindImage("workbench");
         statueNewObject = statueNewObject != null ? statueNewObject : FindChildRecursive(transform, "Statue_new", "StatueNew")?.gameObject;
+        swallowsObject = swallowsObject != null ? swallowsObject : FindChildRecursive(transform, "Swallows", "Swallow")?.gameObject;
 
         ApplyExistingBackground();
         BindChapterButtons();
@@ -386,18 +395,21 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         if (guideType == GuideTextType.LevelFourEndDialogue)
         {
             chapterFiveUnlockDialoguePlaying = false;
+            TryStartSwallowsEndingGate();
             return;
         }
 
         if (guideType != GuideTextType.StartGame)
         {
             TryStartChapterFiveStatueGate();
+            TryStartSwallowsEndingGate();
             return;
         }
 
         UnlockFirstChapter();
         BindChapterButtons();
         TryStartChapterFiveStatueGate();
+        TryStartSwallowsEndingGate();
     }
 
     private void TryStartChapterFiveStatueGate()
@@ -502,6 +514,66 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
         RefreshChapterUnlockStates(true);
         BindChapterButtons();
+    }
+
+    private void TryStartSwallowsEndingGate()
+    {
+        if (swallowsEndingPlaying || !IsSwallowsEndingPending())
+        {
+            return;
+        }
+
+        if (swallowsObject == null)
+        {
+            swallowsObject = FindChildRecursive(transform, "Swallows", "Swallow")?.gameObject;
+        }
+        if (swallowsObject == null)
+        {
+            Debug.LogWarning("CarpetLevelMenu Swallows object is missing; entering ending without swallows animation.");
+            CompleteSwallowsEndingGate();
+            return;
+        }
+
+        swallowsEndingPlaying = true;
+        swallowsObject.SetActive(true);
+
+        GuideLayerController guideLayer = GetComponentInChildren<GuideLayerController>(true);
+        if (guideLayer != null)
+        {
+            guideLayer.ShowMaskOnly();
+        }
+
+        SwallowsAnimationCallback callback = swallowsObject.GetComponent<SwallowsAnimationCallback>();
+        if (callback == null)
+        {
+            callback = swallowsObject.AddComponent<SwallowsAnimationCallback>();
+        }
+        callback.Bind(this);
+
+        Animator animator = swallowsObject.GetComponent<Animator>();
+        if (animator == null)
+        {
+            Debug.LogWarning("CarpetLevelMenu Swallows animator is missing; entering ending without swallows animation.");
+            CompleteSwallowsEndingGate();
+            return;
+        }
+
+        animator.Play("Swallows", 0, 0f);
+    }
+
+    public void CompleteSwallowsEndingGate()
+    {
+        if (!IsSwallowsEndingPending() && IsSwallowsEndingCompleted())
+        {
+            return;
+        }
+
+        swallowsEndingPlaying = false;
+        PlayerPrefs.SetInt(SwallowsEndingPendingKey, 0);
+        PlayerPrefs.SetInt(SwallowsEndingCompletedKey, 1);
+        PlayerPrefs.Save();
+
+        CarpetLevelFlow.EnterEnding();
     }
 
     private static void ApplyChapterButtonState(Button button, int index, ChapterState chapterState)
@@ -1395,6 +1467,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     private static void RefreshChapterUnlockStates(bool markTransitions)
     {
         MarkChapterFiveStatuePendingIfNeeded();
+        MarkSwallowsEndingPendingIfNeeded();
         for (int i = 0; i < chapterUnlockStates.Length; i++)
         {
             SetChapterUnlockState(i, DeriveChapterUnlockState(i), markTransitions);
@@ -1431,6 +1504,32 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     private static bool IsChapterFiveStatueCompleted()
     {
         return PlayerPrefs.GetInt(ChapterFiveStatueCompletedKey, 0) != 0;
+    }
+
+    private static void MarkSwallowsEndingPendingIfNeeded()
+    {
+        if (ChapterFiveIndex >= buttonProgress.Length || IsSwallowsEndingCompleted())
+        {
+            return;
+        }
+
+        int chapterFiveLevelCount = GetConfiguredLevelCount(ChapterFiveIndex);
+        if (chapterFiveLevelCount <= 0 || buttonProgress[ChapterFiveIndex] < chapterFiveLevelCount)
+        {
+            return;
+        }
+
+        PlayerPrefs.SetInt(SwallowsEndingPendingKey, 1);
+    }
+
+    private static bool IsSwallowsEndingPending()
+    {
+        return PlayerPrefs.GetInt(SwallowsEndingPendingKey, 0) != 0;
+    }
+
+    private static bool IsSwallowsEndingCompleted()
+    {
+        return PlayerPrefs.GetInt(SwallowsEndingCompletedKey, 0) != 0;
     }
 
     private static void SetChapterUnlockState(int index, int state, bool markTransition)
@@ -1692,6 +1791,28 @@ public sealed class StatueNewAnimationCallback : MonoBehaviour
         if (menu != null)
         {
             menu.CompleteChapterFiveStatueGate();
+        }
+    }
+}
+
+public sealed class SwallowsAnimationCallback : MonoBehaviour
+{
+    private CarpetLevelMenu menu;
+
+    public void Bind(CarpetLevelMenu owner)
+    {
+        menu = owner;
+    }
+
+    public void OnSwallowsAnimationFinished()
+    {
+        if (menu == null)
+        {
+            menu = GetComponentInParent<CarpetLevelMenu>();
+        }
+        if (menu != null)
+        {
+            menu.CompleteSwallowsEndingGate();
         }
     }
 }

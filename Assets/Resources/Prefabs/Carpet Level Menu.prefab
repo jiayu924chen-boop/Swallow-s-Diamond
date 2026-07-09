@@ -1185,6 +1185,7 @@ MonoBehaviour:
   mainCharacterImage: {fileID: 2175071428454389039}
   workbenchImage: {fileID: 0}
   statueNewObject: {fileID: 1433261863781720639}
+  swallowsObject: {fileID: 1316832688912048530}
 --- !u!1 &1827642878268731626
 GameObject:
   m_ObjectHideFlags: 0
@@ -3292,8 +3293,8 @@ RectTransform:
   - {fileID: 5342331443964304573}
   - {fileID: 535855879734595445}
   - {fileID: 8791800808824798667}
-  - {fileID: 5954221216914829149}
   - {fileID: 6621018407139675424}
+  - {fileID: 5954221216914829149}
   - {fileID: 5284658321144141990}
   - {fileID: 4558006451760578586}
   - {fileID: 467234192417248927}
@@ -4107,7 +4108,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8118235796932182056, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -9,6 +9,7 @@ public static class CarpetLevelFlow
     public const string IntroSceneName = "Intro";
     public const string MenuSceneName = "LevelSelectMenu";
     public const string GameSceneName = "Main";
+    public const string EndingSceneName = "ENDING";
 
     private static CarpetSceneTransitionRunner runner;
     private static bool transitionInProgress;
@@ -115,6 +116,18 @@ public static class CarpetLevelFlow
         RequestedButtonIndex = -1;
         RequestedLevel = 0;
         UnloadLevelSceneDeferred(GameSceneName);
+    }
+
+    public static void EnterEnding()
+    {
+        if (transitionInProgress)
+        {
+            return;
+        }
+
+        RequestedButtonIndex = -1;
+        RequestedLevel = 0;
+        LoadSceneDeferred(EndingSceneName);
     }
 
     public static void ResetGameAndReturnToIntro()
