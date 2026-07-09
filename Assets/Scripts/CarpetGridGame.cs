@@ -52,6 +52,7 @@ public sealed class CarpetGridGame : MonoBehaviour
     private Text carpetText;
     private Text toastText;
     private Text currentLevelText;
+    private Image rootBackgroundImage;
     private RectTransform levelTitleDigits;
     private InputField colsInput;
     private InputField rowsInput;
@@ -171,8 +172,12 @@ public sealed class CarpetGridGame : MonoBehaviour
 
         if (state.pointerDown && !Input.GetMouseButton(0))
         {
+            bool won = state.victory;
             ResetDrag();
-            RequestRender();
+            if (!won)
+            {
+                RequestRender();
+            }
             return;
         }
 
@@ -206,9 +211,8 @@ public sealed class CarpetGridGame : MonoBehaviour
 
         RectTransform root = AddRect("Root", canvasObject.transform);
         Stretch(root);
-        Image minimalRootBg = root.gameObject.AddComponent<Image>();
-        minimalRootBg.color = sceneBackgroundColor;
-        ApplySprite(minimalRootBg, sceneBackgroundSprite);
+        rootBackgroundImage = root.gameObject.AddComponent<Image>();
+        ApplyRootBackground();
         if (Application.isPlaying)
         {
             BuildMinimalGameUi(root);
@@ -1621,8 +1625,12 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     public void OnCellPointerUp()
     {
+        bool won = state.victory;
         ResetDrag();
-        RequestRender();
+        if (!won)
+        {
+            RequestRender();
+        }
     }
 
     private bool HasDragStarted(PointerEventData eventData)
@@ -1948,7 +1956,33 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void ReturnToLevelMenu()
     {
-        CarpetLevelFlow.CompleteActiveLevelAndReturn();
+        int nextLevel;
+        if (!CarpetLevelFlow.CompleteActiveLevelAndTryGetNextLevel(out nextLevel))
+        {
+            return;
+        }
+
+        ApplyGameArtConfig(nextLevel);
+        ApplyRootBackground();
+        if (LoadLevel(nextLevel))
+        {
+            TryShowGuildPopupForLevel(nextLevel);
+            return;
+        }
+
+        CarpetLevelFlow.ReturnToMenu();
+    }
+
+    private void ApplyRootBackground()
+    {
+        if (rootBackgroundImage == null)
+        {
+            return;
+        }
+
+        rootBackgroundImage.color = sceneBackgroundColor;
+        rootBackgroundImage.sprite = sceneBackgroundSprite;
+        rootBackgroundImage.type = Image.Type.Simple;
     }
 
     private List<Carpet> GetMoveGroup(Carpet carpet)
@@ -2142,6 +2176,11 @@ public sealed class CarpetGridGame : MonoBehaviour
         foreach (string key in completedAnimationKeys)
         {
             activePathDiamondAnimations.Remove(key);
+        }
+
+        if (state.victory)
+        {
+            return;
         }
 
         RequestRender();

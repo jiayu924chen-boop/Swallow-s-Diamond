@@ -85,6 +85,26 @@ public static class CarpetLevelFlow
         UnloadLevelSceneDeferred(GameSceneName);
     }
 
+    public static bool CompleteActiveLevelAndTryGetNextLevel(out int nextLevel)
+    {
+        nextLevel = 0;
+        if (transitionInProgress)
+        {
+            return false;
+        }
+
+        if (RequestedButtonIndex >= 0 && CarpetLevelMenu.CompleteButtonProgressAndTryGetNextLevel(RequestedButtonIndex, out nextLevel))
+        {
+            RequestedLevel = nextLevel;
+            return true;
+        }
+
+        RequestedButtonIndex = -1;
+        RequestedLevel = 0;
+        UnloadLevelSceneDeferred(GameSceneName);
+        return false;
+    }
+
     public static void ReturnToMenu()
     {
         if (transitionInProgress)
