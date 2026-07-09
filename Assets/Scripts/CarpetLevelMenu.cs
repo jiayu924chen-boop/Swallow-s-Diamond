@@ -30,17 +30,35 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     private Sprite settingsButtonSprite;
 
     [Header("Buttons")]
+    [SerializeField] private Button[] chapterButtons = Array.Empty<Button>();
+    [SerializeField] private Button settingsButton;
+    [SerializeField] private Button sfxButton;
+    [SerializeField] private Button soundButton;
+    [SerializeField] private Button vibrationButton;
+    [SerializeField] private Button resetButton;
+
     public MenuButtonConfig[] buttonConfigs =
     {
-        new MenuButtonConfig { label = "章节一", levels = new[] { 1, 2 } },
-        new MenuButtonConfig { label = "章节二", levels = new[] { 3, 4 } },
-        new MenuButtonConfig { label = "章节三", levels = new[] { 5, 6 } }
+        new MenuButtonConfig { label = "\u7ae0\u8282\u4e00", levels = new[] { 1, 2 } },
+        new MenuButtonConfig { label = "\u7ae0\u8282\u4e8c", levels = new[] { 3, 4 } },
+        new MenuButtonConfig { label = "\u7ae0\u8282\u4e09", levels = new[] { 5, 6 } },
+        new MenuButtonConfig { label = "\u7ae0\u8282\u56db", levels = new[] { 7, 10 } }
     };
+
+    [Header("Existing Scene Bindings")]
+    [SerializeField] private RectTransform root;
+    [SerializeField] private RectTransform buttonLayer;
+    [SerializeField] private RectTransform decorationLayer;
+    [SerializeField] private RectTransform animationLayer;
+    [SerializeField] private RectTransform settingsPanel;
+    [SerializeField] private Image backgroundImage;
+    [SerializeField] private Image coverBackgroundImage;
+    [SerializeField] private Image mainCharacterImage;
+    [SerializeField] private Image workbenchImage;
 
     private Font uiFont;
     private MenuDecorationConfig[] decorationConfigs = Array.Empty<MenuDecorationConfig>();
     private MenuAnimationConfig[] animationConfigs = Array.Empty<MenuAnimationConfig>();
-    private RectTransform settingsPanel;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RegisterSceneLoaded()
@@ -79,8 +97,18 @@ public sealed class CarpetLevelMenu : MonoBehaviour
             DontDestroyOnLoad(eventSystem);
         }
 
-        GameObject host = new GameObject("Carpet Level Menu");
-        host.AddComponent<CarpetLevelMenu>();
+        GameObject prefab = Resources.Load<GameObject>("Prefabs/CarpetLevelMenu");
+        if (prefab == null)
+        {
+            prefab = Resources.Load<GameObject>("Prefabs/Carpet Level Menu");
+        }
+        if (prefab != null)
+        {
+            Instantiate(prefab);
+            return;
+        }
+
+        Debug.LogWarning("CarpetLevelMenu scene object is missing. Add Resources/Prefabs/CarpetLevelMenu to the menu scene.");
     }
 
     public static void AdvanceButtonProgress(int buttonIndex)
@@ -110,7 +138,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         settingsButtonSprite = LoadSpriteResource(SettingsButtonIconPath);
         LoadProgress();
         ApplySoundSetting();
-        BuildUi();
+        BindExistingUi();
     }
 
     private void ApplyJsonConfig()
@@ -174,6 +202,336 @@ public sealed class CarpetLevelMenu : MonoBehaviour
             return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
         }
 
+        return null;
+    }
+
+    private void BindExistingUi()
+    {
+        EnsureEventSystemExists();
+
+        root = root != null ? root : FindRect("Root");
+        buttonLayer = buttonLayer != null ? buttonLayer : FindRect("ButtonLayer");
+        decorationLayer = decorationLayer != null ? decorationLayer : FindRect("DecorationLayer");
+        animationLayer = animationLayer != null ? animationLayer : FindRect("AnimationLayer");
+        settingsPanel = settingsPanel != null ? settingsPanel : FindRect("SettingsPanel");
+        backgroundImage = backgroundImage != null ? backgroundImage : FindImage("Root");
+        coverBackgroundImage = coverBackgroundImage != null ? coverBackgroundImage : FindImage("MenuBackgroundImage");
+        mainCharacterImage = mainCharacterImage != null ? mainCharacterImage : FindImage("MainCharacter");
+        workbenchImage = workbenchImage != null ? workbenchImage : FindImage("workbench");
+
+        ApplyExistingBackground();
+        BindChapterButtons();
+        BindSettingsControls();
+        BindExistingDecorations();
+        BindExistingAnimations();
+    }
+
+    private static void EnsureEventSystemExists()
+    {
+        if (FindObjectOfType<EventSystem>() != null)
+        {
+            return;
+        }
+
+        GameObject eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+        DontDestroyOnLoad(eventSystem);
+    }
+
+    private void ApplyExistingBackground()
+    {
+        if (backgroundImage != null)
+        {
+            backgroundImage.color = backgroundColor;
+            backgroundImage.raycastTarget = false;
+        }
+        if (coverBackgroundImage != null && backgroundSprite != null)
+        {
+            coverBackgroundImage.sprite = backgroundSprite;
+            coverBackgroundImage.color = Color.white;
+            coverBackgroundImage.preserveAspect = true;
+            coverBackgroundImage.raycastTarget = false;
+        }
+    }
+
+    private void BindChapterButtons()
+    {
+        Button[] resolvedButtons = ResolveChapterButtons();
+        chapterButtons = resolvedButtons;
+
+        for (int i = 0; i < ChapterButtonCount; i++)
+        {
+            if (i >= resolvedButtons.Length || resolvedButtons[i] == null)
+            {
+                Debug.LogWarning("CarpetLevelMenu chapter button is missing: " + (i + 1));
+                continue;
+            }
+
+            int index = i;
+            MenuButtonConfig config = GetButtonConfig(index);
+            ChapterState chapterState = GetChapterState(index);
+            Button button = resolvedButtons[index];
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => StartConfiguredLevel(index));
+            button.interactable = chapterState == ChapterState.Open;
+
+            Image image = button.targetGraphic as Image;
+            if (image == null)
+            {
+                image = button.GetComponent<Image>();
+                button.targetGraphic = image;
+            }
+            if (image != null)
+            {
+                image.color = ChapterButtonColor(chapterState);
+            }
+
+            Text text = button.GetComponentInChildren<Text>(true);
+            if (text != null)
+            {
+                text.font = uiFont;
+                text.text = BuildChapterLabel(config, chapterState);
+            }
+        }
+    }
+
+    private Button[] ResolveChapterButtons()
+    {
+        Button[] resolved = new Button[ChapterButtonCount];
+        if (chapterButtons != null)
+        {
+            for (int i = 0; i < Mathf.Min(chapterButtons.Length, resolved.Length); i++)
+            {
+                resolved[i] = chapterButtons[i];
+            }
+        }
+
+        Button[] candidates = (buttonLayer != null ? buttonLayer : transform).GetComponentsInChildren<Button>(true)
+            .Where(button => button != null && IsChapterButtonName(button.name))
+            .OrderByDescending(button => ((RectTransform)button.transform).anchoredPosition.y)
+            .ToArray();
+
+        for (int i = 0; i < resolved.Length && i < candidates.Length; i++)
+        {
+            if (resolved[i] == null)
+            {
+                resolved[i] = candidates[i];
+            }
+        }
+        return resolved;
+    }
+
+    private static bool IsChapterButtonName(string value)
+    {
+        return !string.IsNullOrEmpty(value) && value.StartsWith("Button ", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void BindSettingsControls()
+    {
+        settingsButton = settingsButton != null ? settingsButton : FindButton("ImageButton Settings", "Settings");
+        sfxButton = sfxButton != null ? sfxButton : FindButton("Toggle 音效");
+        soundButton = soundButton != null ? soundButton : FindButton("Toggle 声音");
+        vibrationButton = vibrationButton != null ? vibrationButton : FindButton("Toggle 震动");
+        resetButton = resetButton != null ? resetButton : FindButton("Button 重置游戏");
+
+        if (settingsButton != null)
+        {
+            if (settingsButtonSprite != null)
+            {
+                Image image = settingsButton.targetGraphic as Image ?? settingsButton.GetComponent<Image>();
+                if (image != null)
+                {
+                    image.sprite = settingsButtonSprite;
+                    image.preserveAspect = true;
+                }
+            }
+            settingsButton.onClick.RemoveAllListeners();
+            settingsButton.onClick.AddListener(ToggleSettingsPanel);
+        }
+
+        BindSettingButton(sfxButton, "音效", SfxKey, true, null);
+        BindSettingButton(soundButton, "声音", SoundKey, true, ApplySoundSetting);
+        BindSettingButton(vibrationButton, "震动", VibrationKey, true, null);
+
+        if (resetButton != null)
+        {
+            resetButton.onClick.RemoveAllListeners();
+            resetButton.onClick.AddListener(ResetAllProgress);
+            Text text = resetButton.GetComponentInChildren<Text>(true);
+            if (text != null)
+            {
+                text.font = uiFont;
+                text.text = "重置游戏";
+            }
+        }
+
+        if (settingsPanel != null)
+        {
+            settingsPanel.gameObject.SetActive(false);
+        }
+    }
+
+    private void BindSettingButton(Button button, string label, string key, bool defaultValue, Action onChanged)
+    {
+        if (button == null)
+        {
+            Debug.LogWarning("CarpetLevelMenu setting button is missing: " + label);
+            return;
+        }
+
+        Image image = button.targetGraphic as Image ?? button.GetComponent<Image>();
+        Text text = button.GetComponentInChildren<Text>(true);
+        if (text != null)
+        {
+            text.font = uiFont;
+        }
+
+        Action refresh = () =>
+        {
+            bool enabled = GetBoolSetting(key, defaultValue);
+            if (image != null)
+            {
+                image.color = enabled ? new Color(0.18f, 0.48f, 0.42f, 0.96f) : new Color(0.38f, 0.38f, 0.38f, 0.96f);
+            }
+            if (text != null)
+            {
+                text.text = label + (enabled ? " 开" : " 关");
+            }
+        };
+
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(() =>
+        {
+            SetBoolSetting(key, !GetBoolSetting(key, defaultValue));
+            refresh();
+            onChanged?.Invoke();
+        });
+        refresh();
+    }
+
+    private void BindExistingDecorations()
+    {
+        foreach (MenuDecorationConfig config in decorationConfigs)
+        {
+            if (config == null || string.IsNullOrEmpty(config.image))
+            {
+                continue;
+            }
+
+            Image image = ResolveDecorationImage(config);
+            if (image == null)
+            {
+                Debug.LogWarning("CarpetLevelMenu decoration object is missing: " + config.id);
+                continue;
+            }
+
+            Sprite sprite = LoadSpriteResource(config.image);
+            if (sprite != null)
+            {
+                image.sprite = sprite;
+            }
+            image.color = ParseColor(config.color, Color.white);
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+
+            BindDecorationShadow(config, sprite);
+            BuildDecorationFrameAnimation(image.rectTransform, image, config);
+        }
+    }
+
+    private void BindDecorationShadow(MenuDecorationConfig config, Sprite sprite)
+    {
+        if (!config.shadow)
+        {
+            return;
+        }
+
+        Image shadowImage = FindImage("MenuDecorationShadow " + config.id);
+        if (shadowImage == null)
+        {
+            return;
+        }
+        if (sprite != null)
+        {
+            shadowImage.sprite = sprite;
+        }
+        shadowImage.color = ParseColor(config.shadowColor, new Color(0.10f, 0.07f, 0.08f, 0.40f));
+        shadowImage.raycastTarget = false;
+    }
+
+    private Image ResolveDecorationImage(MenuDecorationConfig config)
+    {
+        if (config.id.IndexOf("character", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return mainCharacterImage != null ? mainCharacterImage : FindImage("MainCharacter");
+        }
+        if (config.id.IndexOf("workbench", StringComparison.OrdinalIgnoreCase) >= 0 || config.id.IndexOf("bench", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return workbenchImage != null ? workbenchImage : FindImage("workbench");
+        }
+
+        return FindImage(config.id) ?? FindImage("MenuDecoration " + config.id);
+    }
+
+    private void BindExistingAnimations()
+    {
+        if (animationLayer == null)
+        {
+            return;
+        }
+
+        foreach (MonoBehaviour hook in backgroundAnimationHooks)
+        {
+            if (hook is ICarpetMenuBackgroundAnimation animationHook)
+            {
+                foreach (MenuAnimationConfig config in animationConfigs)
+                {
+                    animationHook.BuildAnimation(animationLayer, config);
+                }
+            }
+        }
+    }
+
+    private RectTransform FindRect(params string[] names)
+    {
+        Transform found = FindChildRecursive(transform, names);
+        return found as RectTransform;
+    }
+
+    private Image FindImage(params string[] names)
+    {
+        Transform found = FindChildRecursive(transform, names);
+        return found != null ? found.GetComponent<Image>() : null;
+    }
+
+    private Button FindButton(params string[] names)
+    {
+        Transform found = FindChildRecursive(transform, names);
+        return found != null ? found.GetComponent<Button>() : null;
+    }
+
+    private static Transform FindChildRecursive(Transform parent, params string[] names)
+    {
+        if (parent == null || names == null || names.Length == 0)
+        {
+            return null;
+        }
+
+        foreach (Transform child in parent)
+        {
+            foreach (string name in names)
+            {
+                if (string.Equals(child.name, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return child;
+                }
+            }
+
+            Transform found = FindChildRecursive(child, names);
+            if (found != null)
+            {
+                return found;
+            }
+        }
         return null;
     }
 
@@ -331,12 +689,17 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
             if (sequences.Count > 0)
             {
-                item.gameObject.AddComponent<MenuDecorationTriggeredFrameAnimator>().Init(
+                MenuDecorationTriggeredFrameAnimator triggeredAnimator = item.GetComponent<MenuDecorationTriggeredFrameAnimator>();
+                if (triggeredAnimator == null)
+                {
+                    triggeredAnimator = item.gameObject.AddComponent<MenuDecorationTriggeredFrameAnimator>();
+                }
+                triggeredAnimator.Init(
                     item,
                     image,
                     image.sprite,
                     sequences.ToArray(),
-                    config.position,
+                    item.anchoredPosition,
                     config.triggerIntervalSeconds,
                     config.triggerFrameSeconds,
                     config.breathAmplitude,
@@ -371,12 +734,17 @@ public sealed class CarpetLevelMenu : MonoBehaviour
             return;
         }
 
-        item.gameObject.AddComponent<MenuDecorationFrameAnimator>().Init(
+        MenuDecorationFrameAnimator frameAnimator = item.GetComponent<MenuDecorationFrameAnimator>();
+        if (frameAnimator == null)
+        {
+            frameAnimator = item.gameObject.AddComponent<MenuDecorationFrameAnimator>();
+        }
+        frameAnimator.Init(
             item,
             image,
             frames.ToArray(),
             config.animationDurations,
-            config.position,
+            item.anchoredPosition,
             config.breathAmplitude,
             config.breathScale,
             config.breathSeconds,
@@ -556,7 +924,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         {
             bool enabled = GetBoolSetting(key, defaultValue);
             image.color = enabled ? new Color(0.18f, 0.48f, 0.42f, 0.96f) : new Color(0.38f, 0.38f, 0.38f, 0.96f);
-            text.text = label + (enabled ? " 开" : " 关");
+            text.text = label + (enabled ? " \u5f00" : " \u5173");
         };
 
         button.onClick.AddListener(() =>
@@ -1002,7 +1370,6 @@ public sealed class MenuDecorationFrameAnimator : MonoBehaviour
         {
             image = GetComponent<Image>();
         }
-        EnsureOverlayImage();
     }
 
     private void Update()
@@ -1041,7 +1408,7 @@ public sealed class MenuDecorationFrameAnimator : MonoBehaviour
 
     private void EnsureOverlayImage()
     {
-        if (image == null || overlayImage != null)
+        if (image == null || overlayImage != null || frameFadeSeconds <= 0f)
         {
             return;
         }
@@ -1159,7 +1526,6 @@ public sealed class MenuDecorationTriggeredFrameAnimator : MonoBehaviour
         {
             image = GetComponent<Image>();
         }
-        EnsureOverlayImage();
     }
 
     private void Update()
@@ -1286,7 +1652,7 @@ public sealed class MenuDecorationTriggeredFrameAnimator : MonoBehaviour
 
     private void EnsureOverlayImage()
     {
-        if (image == null || overlayImage != null)
+        if (image == null || overlayImage != null || frameFadeSeconds <= 0f)
         {
             return;
         }
