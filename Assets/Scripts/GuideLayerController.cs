@@ -74,6 +74,8 @@ public sealed class GuideLayerController : MonoBehaviour
 
     private void ShowNextLine()
     {
+        AudioManager.PlaySfx(AudioSfx.UI);
+
         if (activeDialogue == null || activeDialogue.lines == null || activeDialogue.lines.Length == 0)
         {
             HideGuide();

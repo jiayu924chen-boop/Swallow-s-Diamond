@@ -1260,6 +1260,8 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
     private void ToggleSettingsPanel()
     {
+        AudioManager.PlaySfx(AudioSfx.UI);
+
         if (settingsPanel != null)
         {
             settingsPanel.gameObject.SetActive(!settingsPanel.gameObject.activeSelf);
@@ -1346,6 +1348,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         }
 
         int progress = Mathf.Clamp(buttonProgress[buttonIndex], 0, levels.Length - 1);
+        AudioManager.PlaySfx(AudioSfx.UI);
         CarpetLevelFlow.StartLevel(buttonIndex, levels[progress]);
     }
 

@@ -1,6 +1,16 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+public static class AudioSfx
+{
+    public const string Start = "start";
+    public const string UI = "UI";
+    public const string Move = "move";
+    public const string Target = "target";
+    public const string Win = "win";
+    public const string Chapter = "chapter";
+}
+
 public sealed class AudioManager : MonoBehaviour
 {
     private const string DefaultConfigPath = "Config/AudioConfig";
@@ -144,6 +154,13 @@ public sealed class AudioManager : MonoBehaviour
         AudioSource target = isBgm ? bgmAudio : sfxAudio;
         if (target == null)
         {
+            return;
+        }
+
+        if (!isBgm)
+        {
+            target.loop = false;
+            target.PlayOneShot(clip);
             return;
         }
 

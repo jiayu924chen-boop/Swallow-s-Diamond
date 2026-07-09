@@ -28,6 +28,7 @@ public sealed class EndingSceneActions : MonoBehaviour
     {
         if (isTyping)
         {
+            AudioManager.PlaySfx(AudioSfx.UI);
             FinishCurrentLine();
             return;
         }
@@ -45,6 +46,7 @@ public sealed class EndingSceneActions : MonoBehaviour
 
         if (visibleLineIndex + 1 < lineObjects.Length)
         {
+            AudioManager.PlaySfx(AudioSfx.UI);
             visibleLineIndex++;
             StartTypingCurrentLine();
             return;

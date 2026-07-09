@@ -292,6 +292,8 @@ public sealed class IntroSceneController : MonoBehaviour
             return;
         }
 
+        AudioManager.PlaySfx(AudioSfx.Start);
+
         if (CarpetLevelMenu.HasStartedGameProgress())
         {
             CarpetLevelFlow.EnterMenuFromIntro();
@@ -324,6 +326,8 @@ public sealed class IntroSceneController : MonoBehaviour
     {
         if (state == IntroState.Story)
         {
+            AudioManager.PlaySfx(AudioSfx.UI);
+
             if (revealRoutine != null)
             {
                 StopCoroutine(revealRoutine);
@@ -349,6 +353,7 @@ public sealed class IntroSceneController : MonoBehaviour
 
         if (state == IntroState.AwaitingVideoClick)
         {
+            AudioManager.PlaySfx(AudioSfx.UI);
             StartVideo();
         }
     }

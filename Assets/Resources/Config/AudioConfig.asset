@@ -15,8 +15,6 @@ MonoBehaviour:
   entries:
   - soundType: bgm
     clip: {fileID: 8300000, guid: 6b194a4b91f94efa98e332624e858357, type: 3}
-  - soundType: perfect_beauty_bgm
-    clip: {fileID: 8300000, guid: 6b194a4b91f94efa98e332624e858357, type: 3}
   - soundType: UI
     clip: {fileID: 8300000, guid: cdd9768d4645de843b51fabb4c78602b, type: 3}
   - soundType: win

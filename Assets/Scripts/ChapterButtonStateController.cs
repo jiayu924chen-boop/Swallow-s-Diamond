@@ -70,6 +70,7 @@ public sealed class ChapterButtonStateController : MonoBehaviour
 
     public void PlayUnlockToFinish()
     {
+        AudioManager.PlaySfx(AudioSfx.Chapter);
         PlayTransition(ChapterButtonState.Finish, UnlockToFinishAnimation);
     }
 

@@ -270,7 +270,7 @@ public sealed class CarpetGridGame : MonoBehaviour
             Fill(currentLevelText.rectTransform);
         }
 
-        Button backButton = AddIconOnlyButton(root, "Back", Hex("#6a994e"), CarpetLevelFlow.ReturnToMenu, 0);
+        Button backButton = AddIconOnlyButton(root, "Back", Hex("#6a994e"), ReturnToMenuFromUi, 0);
         RectTransform backRect = backButton.transform as RectTransform;
         backRect.anchorMin = new Vector2(0f, 1f);
         backRect.anchorMax = new Vector2(0f, 1f);
@@ -492,7 +492,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         actionLayout.childForceExpandWidth = true;
         actionLayout.childForceExpandHeight = false;
         actions.gameObject.AddComponent<LayoutElement>().preferredHeight = 38;
-        AddButton(actions, "Menu", Hex("#6a994e"), CarpetLevelFlow.ReturnToMenu);
+        AddButton(actions, "Menu", Hex("#6a994e"), ReturnToMenuFromUi);
         AddButton(actions, "Refresh", Hex("#457b9d"), RefreshJsonLevels);
 
         EnsureLayoutElement(AddButton(parent, "Reset Level", Hex("#8b6f47"), ResetCurrentLevel).gameObject).preferredHeight = 38;
@@ -735,7 +735,14 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void RestartCurrentLevel()
     {
+        AudioManager.PlaySfx(AudioSfx.UI);
         ResetCurrentLevel();
+    }
+
+    private void ReturnToMenuFromUi()
+    {
+        AudioManager.PlaySfx(AudioSfx.UI);
+        CarpetLevelFlow.ReturnToMenu();
     }
 
     private void TryShowGuildPopupForLevel(int level)
@@ -1870,6 +1877,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         }
 
         QueueCarpetMotion(carpet.id, carpet.row, carpet.col, row, col, MoveAnimationDuration);
+        AudioManager.PlaySfx(AudioSfx.Move);
         SetLastMoveDirection(carpet, row - carpet.row, col - carpet.col);
         carpet.row = row;
         carpet.col = col;
@@ -1934,6 +1942,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         if (won && announce && !state.victory)
         {
             QueueVictoryDiamondAnimations(playable);
+            AudioManager.PlaySfx(AudioSfx.Win);
             SetToast("胜利！所有地毯都铺到目标了。");
             if (state.mode == GameMode.Play)
             {
@@ -1945,6 +1954,7 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void QueueVictoryDiamondAnimations(IEnumerable<Carpet> carpets)
     {
+        AudioManager.PlaySfx(AudioSfx.Target);
         foreach (Carpet carpet in carpets)
         {
             QueueDiamondAnimation(carpet.id, DiamondAnimationTrigger.Target);

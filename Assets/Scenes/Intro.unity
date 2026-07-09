@@ -236,7 +236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7211ac8efe1747d3b123d59d08bc6c8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  config: {fileID: 11400000, guid: a9f20898e655ad642a1b70e8c251a0ed, type: 2}
+  config: {fileID: 11400000, guid: 61abf6417e914960a07629ce3faf0db6, type: 2}
   bgmAudio: {fileID: 1032374928}
   sfxAudio: {fileID: 1032374927}
 --- !u!82 &1032374927
