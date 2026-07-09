@@ -113,7 +113,7 @@ public sealed class ChapterButtonStateController : MonoBehaviour
 
     private void PlayAnimation(string animationName)
     {
-        if (animator != null && !string.IsNullOrEmpty(animationName))
+        if (animator != null && animator.gameObject.activeInHierarchy && !string.IsNullOrEmpty(animationName))
         {
             animator.Play(animationName, 0, 0f);
         }
@@ -144,7 +144,7 @@ public sealed class ChapterButtonStateController : MonoBehaviour
         Graphic graphic = stateObject.GetComponent<Graphic>();
         if (graphic != null)
         {
-            graphic.raycastTarget = active;
+            graphic.raycastTarget = false;
         }
     }
 }

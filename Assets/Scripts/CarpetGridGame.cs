@@ -14,6 +14,8 @@ public sealed class CarpetGridGame : MonoBehaviour
     private const string LevelFolderName = "levels";
     private const string GameArtConfigPath = "Art/game_art_config.json";
     private const string BoardVisualConfigResourcePath = "Config/BoardVisualConfig";
+    private const string GuildPopupResourceFolder = "Prefabs/Guild";
+    private const string GuildPopupSaveKeyPrefix = "swallow-diamond-guild-popup-";
     private const float DragStartThresholdPixels = 10f;
     private const float DragStepInterval = 0.055f;
     private const float MoveAnimationDuration = 0.13f;
@@ -147,7 +149,10 @@ public sealed class CarpetGridGame : MonoBehaviour
         BuildUi();
         if (savedLevels.ContainsKey(requestedLevel))
         {
-            LoadLevel(requestedLevel);
+            if (LoadLevel(requestedLevel))
+            {
+                TryShowGuildPopupForLevel(requestedLevel);
+            }
         }
         else
         {
@@ -722,6 +727,64 @@ public sealed class CarpetGridGame : MonoBehaviour
     private void RestartCurrentLevel()
     {
         CarpetLevelFlow.ResetGameAndReturnToIntro();
+    }
+
+    private void TryShowGuildPopupForLevel(int level)
+    {
+        int popupIndex = GuildPopupIndexForLevel(level);
+        if (popupIndex <= 0)
+        {
+            return;
+        }
+
+        string saveKey = GuildPopupSaveKeyPrefix + popupIndex.ToString("00");
+        if (GuildPopup.HasConfirmed(saveKey))
+        {
+            return;
+        }
+
+        string prefabName = "Guild" + popupIndex.ToString("00");
+        GameObject prefab = Resources.Load<GameObject>(GuildPopupResourceFolder + "/" + prefabName);
+        if (prefab == null)
+        {
+            Debug.LogWarning("Guild popup prefab is missing: " + prefabName);
+            return;
+        }
+
+        Canvas canvas = GetComponentInChildren<Canvas>(true);
+        Transform parent = canvas != null ? canvas.transform : transform;
+        GameObject instance = Instantiate(prefab, parent, false);
+        instance.name = prefabName;
+        instance.transform.SetAsLastSibling();
+
+        RectTransform rect = instance.transform as RectTransform;
+        if (rect != null)
+        {
+            Stretch(rect);
+        }
+
+        GuildPopup popup = instance.GetComponent<GuildPopup>();
+        if (popup != null)
+        {
+            popup.SetSaveKey(saveKey);
+        }
+    }
+
+    private static int GuildPopupIndexForLevel(int level)
+    {
+        switch (level)
+        {
+            case 1:
+                return 1;
+            case 4:
+                return 2;
+            case 7:
+                return 3;
+            case 10:
+                return 4;
+            default:
+                return 0;
+        }
     }
 
     private LevelData SerializeLevel()
