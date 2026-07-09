@@ -1122,7 +1122,7 @@ Audio/perfect_beauty_bgm
 - 行为变化：当前代码里还没有直接调用新的 Animation API，但 Unity 编辑器在打开项目时会多加载 2D Animation 相关程序集和内置模块，后续菜单帧动画或角色骨骼资源可以直接接入。
 - 数据与资源变化：远端提交 `1097fa7 feat: 新增animation包` 只改动 `Packages/manifest.json`、`Packages/packages-lock.json`，当前本地已同步到该包版本。
 - 验收方式：重新打开 Unity，确认 Package Manager 中存在 `2D Animation 9.2.2`，控制台没有缺失程序集或包解析错误。
-- 接手风险：本地分支当前落后远端 1 个提交；如果后续继续提交文档或玩法改动，需先同步该包依赖，避免不同开发机的 `Packages` 状态不一致。
+- 接手风险：该依赖目前来自远端同步；如果其他开发机尚未拉取 `1097fa7`，打开项目时可能出现 `Packages` 解析结果不一致，协作前需先统一包版本。
 
 ### 2026-07-09 钻石预制体渲染与方向标识调整（working tree）
 
