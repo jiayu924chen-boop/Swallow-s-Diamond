@@ -19,6 +19,7 @@ public sealed class CarpetGridGame : MonoBehaviour
     private const float ActiveCarpetScale = 1.08f;
     private const int ProceduralBoardCellSize = 64;
     private const float DiamondInsetScale = 0.82f;
+    private const string DiamondPrefabResourcePath = "DiamondPrefab/DiamondPrefab";
     private const string LevelTitleLabel = "level";
     private const float LevelTitleArtHeight = 126f;
 
@@ -69,6 +70,7 @@ public sealed class CarpetGridGame : MonoBehaviour
     private Sprite diamondHighlightSprite;
     private Sprite backIconSprite;
     private Sprite restartIconSprite;
+    private GameObject diamondPrefab;
     private Vector2 playBoardFrameSize = Vector2.zero;
     public Color sceneBackgroundColor = new Color(0.96f, 0.94f, 0.90f, 1f);
     public Color boardBackgroundColor = new Color(0.93f, 0.90f, 0.86f, 1f);
@@ -1083,6 +1085,11 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private Sprite GetBoardCellSprite(int row, int col)
     {
+        if (boardCellSprite != null)
+        {
+            return boardCellSprite;
+        }
+
         string key = row + "," + col;
         if (proceduralBoardCellSprites.TryGetValue(key, out Sprite cached) && cached != null)
         {
@@ -1295,6 +1302,9 @@ public sealed class CarpetGridGame : MonoBehaviour
         {
             carpet.history.Clear();
             carpet.steps = 0;
+            carpet.hasMoveDirection = false;
+            carpet.lastDirectionRow = 0;
+            carpet.lastDirectionCol = 0;
         }
         PaintCarpetStarts();
         ResetDrag();
@@ -1323,6 +1333,9 @@ public sealed class CarpetGridGame : MonoBehaviour
             carpet.history.Clear();
             carpet.steps = 0;
             carpet.alive = true;
+            carpet.hasMoveDirection = false;
+            carpet.lastDirectionRow = 0;
+            carpet.lastDirectionCol = 0;
         }
     }
 
@@ -1716,6 +1729,7 @@ public sealed class CarpetGridGame : MonoBehaviour
             current.color = lastMove.previousColor ?? "";
             current.owner = lastMove.previousOwner;
             QueueCarpetMotion(carpet.id, carpet.row, carpet.col, lastMove.fromRow, lastMove.fromCol);
+            SetLastMoveDirection(carpet, lastMove.fromRow - carpet.row, lastMove.fromCol - carpet.col);
             carpet.row = lastMove.fromRow;
             carpet.col = lastMove.fromCol;
             carpet.length += info.cost;
@@ -1747,6 +1761,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         }
 
         QueueCarpetMotion(carpet.id, carpet.row, carpet.col, row, col);
+        SetLastMoveDirection(carpet, row - carpet.row, col - carpet.col);
         carpet.row = row;
         carpet.col = col;
         carpet.length -= info.cost;
@@ -1918,6 +1933,18 @@ public sealed class CarpetGridGame : MonoBehaviour
             toRow = toRow,
             toCol = toCol
         };
+    }
+
+    private static void SetLastMoveDirection(Carpet carpet, int rowDelta, int colDelta)
+    {
+        if (carpet == null || (rowDelta == 0 && colDelta == 0))
+        {
+            return;
+        }
+
+        carpet.hasMoveDirection = true;
+        carpet.lastDirectionRow = Math.Sign(rowDelta);
+        carpet.lastDirectionCol = Math.Sign(colDelta);
     }
 
     private void QueuePathReveal(int row, int col, int owner)
@@ -2147,34 +2174,11 @@ public sealed class CarpetGridGame : MonoBehaviour
                 piece.sizeDelta = new Vector2(pieceSize, pieceSize);
                 Vector2 settledPosition = new Vector2((i - (cellCarpets.Count - 1) * 0.5f) * 7, 0);
                 piece.anchoredPosition = settledPosition;
-                Image pieceImage = piece.gameObject.AddComponent<Image>();
-                pieceImage.color = string.IsNullOrEmpty(carpet.passColor) ? Hex(carpet.color) : Hex(carpet.passColor);
-                pieceImage.raycastTarget = false;
-                ApplySprite(pieceImage, carpetSprite);
-                AddDiamondHighlight(piece, pieceSize);
+                Image pieceGraphic = piece.gameObject.AddComponent<Image>();
+                pieceGraphic.color = new Color(1f, 1f, 1f, 0f);
+                pieceGraphic.raycastTarget = false;
+                AddDiamondPrefabVisual(piece, carpet, pieceSize);
                 bool isActive = carpet.id == state.activeId;
-                if (isActive)
-                {
-                    Outline outline = piece.gameObject.AddComponent<Outline>();
-                    outline.effectColor = Hex("#111111");
-                    outline.effectDistance = new Vector2(2, -2);
-                }
-
-                if (!string.IsNullOrEmpty(carpet.passColor))
-                {
-                    RectTransform inner = AddRect("MainColor", piece);
-                    Center(inner);
-                    inner.sizeDelta = new Vector2(pieceSize * 0.56f, pieceSize * 0.56f);
-                    Image innerImage = inner.gameObject.AddComponent<Image>();
-                    innerImage.color = Hex(carpet.color);
-                    innerImage.raycastTarget = false;
-                    ApplySprite(innerImage, carpetSprite);
-                    AddDiamondHighlight(inner, pieceSize * 0.56f);
-                }
-
-                Text length = AddText(piece, carpet.length.ToString(), Mathf.Clamp((int)(size * 0.32f), 12, 22), FontStyle.Bold, Color.white);
-                length.raycastTarget = false;
-                Fill(length.rectTransform, 2);
                 Vector2 startPosition = settledPosition;
                 CarpetMotion motion;
                 if (pendingMotions.TryGetValue(carpet.id, out motion))
@@ -2246,7 +2250,7 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void RenderPathDiamond(RectTransform cellRect, CellData cell, float size)
     {
-        if (cell == null || cell.owner < 0 || string.IsNullOrEmpty(cell.color) || carpetSprite == null)
+        if (cell == null || cell.owner < 0 || string.IsNullOrEmpty(cell.color))
         {
             return;
         }
@@ -2259,11 +2263,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         Center(diamond);
         float diamondSize = size * DiamondInsetScale;
         diamond.sizeDelta = new Vector2(diamondSize, diamondSize);
-        Image diamondImage = diamond.gameObject.AddComponent<Image>();
-        diamondImage.color = Hex(cell.color);
-        diamondImage.raycastTarget = false;
-        ApplySprite(diamondImage, carpetSprite);
-        AddDiamondHighlight(diamond, diamondSize);
+        AddDiamondPrefabVisual(diamond, cell.color, cell.color, diamondSize, "", false, false, 0, 0, false, false);
     }
 
     private void AddDiamondHighlight(RectTransform parent, float size)
@@ -2322,6 +2322,215 @@ public sealed class CarpetGridGame : MonoBehaviour
         texture.Apply(false, true);
         diamondHighlightSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
         return diamondHighlightSprite;
+    }
+
+    private void AddDiamondPrefabVisual(RectTransform parent, Carpet carpet, float size, bool forceMainColor = false)
+    {
+        Vector2Int direction = GetCarpetDirection(carpet);
+        bool showDirection = !forceMainColor;
+        bool useSilver = showDirection && UsesSilverDirection(carpet);
+        bool showSmallDiamond = !string.IsNullOrEmpty(carpet.passColor);
+        bool showOutline = !string.IsNullOrEmpty(carpet.groupId);
+        string outerColor = showSmallDiamond ? carpet.passColor : carpet.color;
+        AddDiamondPrefabVisual(
+            parent,
+            outerColor,
+            carpet.color,
+            size,
+            forceMainColor ? "" : carpet.length.ToString(),
+            showDirection,
+            useSilver,
+            direction.x,
+            direction.y,
+            showSmallDiamond,
+            showOutline);
+    }
+
+    private void AddDiamondPrefabVisual(RectTransform parent, string outerColorHex, string mainColorHex, float size, string textValue, bool showDirection, bool useSilver, int directionRow, int directionCol, bool showSmallDiamond, bool showOutline)
+    {
+        GameObject prefab = GetDiamondPrefab();
+        if (prefab == null)
+        {
+            Image fallbackImage = parent.gameObject.AddComponent<Image>();
+            fallbackImage.color = Hex(outerColorHex);
+            fallbackImage.raycastTarget = false;
+            ApplySprite(fallbackImage, carpetSprite);
+            AddDiamondHighlight(parent, size);
+            return;
+        }
+
+        GameObject visual = Instantiate(prefab, parent, false);
+        visual.name = string.IsNullOrEmpty(textValue) && !showDirection ? "DiamondPrefab StaticVisual" : "DiamondPrefab Visual";
+        RectTransform visualRect = visual.transform as RectTransform;
+        if (visualRect != null)
+        {
+            Center(visualRect);
+            float baseSize = Mathf.Max(Mathf.Abs(visualRect.sizeDelta.x), Mathf.Abs(visualRect.sizeDelta.y));
+            if (baseSize <= 0.01f)
+            {
+                baseSize = 64f;
+            }
+            visualRect.localScale = Vector3.one * (size / baseSize);
+        }
+
+        foreach (Graphic graphic in visual.GetComponentsInChildren<Graphic>(true))
+        {
+            graphic.raycastTarget = false;
+        }
+
+        Color outerColor = Hex(outerColorHex);
+        Color mainColor = Hex(mainColorHex);
+        SetDiamondImageColor(visual.transform, "10_DiamondNormal", outerColor);
+        SetDiamondImageColor(visual.transform, "20_DiamondSmall", mainColor);
+        SetDiamondLayerVisible(visual.transform, "20_DiamondSmall", showSmallDiamond);
+        SetDiamondLayerVisible(visual.transform, "21_DiamondSmallHighlight", showSmallDiamond);
+        SetDiamondLayerVisible(visual.transform, "40_Outline", showOutline);
+        UpdateDiamondText(visual.transform, textValue);
+        UpdateDiamondDirectionDecorations(visual.transform, showDirection, useSilver, directionRow, directionCol);
+    }
+
+    private GameObject GetDiamondPrefab()
+    {
+        if (diamondPrefab == null)
+        {
+            diamondPrefab = Resources.Load<GameObject>(DiamondPrefabResourcePath);
+        }
+
+        return diamondPrefab;
+    }
+
+    private void SetDiamondImageColor(Transform root, string childName, Color color)
+    {
+        Transform child = FindChildRecursive(root, childName);
+        if (child == null)
+        {
+            return;
+        }
+
+        Image image = child.GetComponent<Image>();
+        if (image != null)
+        {
+            image.color = color;
+        }
+    }
+
+    private void SetDiamondLayerVisible(Transform root, string childName, bool visible)
+    {
+        Transform child = FindChildRecursive(root, childName);
+        if (child != null)
+        {
+            child.gameObject.SetActive(visible);
+        }
+    }
+
+    private void UpdateDiamondText(Transform root, string textValue)
+    {
+        Text text = root.GetComponentsInChildren<Text>(true).FirstOrDefault();
+        if (text == null)
+        {
+            return;
+        }
+
+        bool visible = !string.IsNullOrEmpty(textValue);
+        text.gameObject.SetActive(visible);
+        text.raycastTarget = false;
+        text.text = visible ? textValue : "";
+    }
+
+    private void UpdateDiamondDirectionDecorations(Transform root, bool showDirection, bool useSilver, int directionRow, int directionCol)
+    {
+        Transform gold = FindChildRecursive(root, "30_DirectionGold");
+        Transform silver = FindChildRecursive(root, "31_DirectionSilver");
+
+        SetDirectionDecoration(gold, showDirection && !useSilver, directionRow, directionCol);
+        SetDirectionDecoration(silver, showDirection && useSilver, directionRow, directionCol);
+    }
+
+    private void SetDirectionDecoration(Transform decoration, bool visible, int directionRow, int directionCol)
+    {
+        if (decoration == null)
+        {
+            return;
+        }
+
+        decoration.gameObject.SetActive(visible);
+        if (!visible)
+        {
+            return;
+        }
+
+        decoration.localRotation = Quaternion.Euler(0f, 0f, DirectionAngle(directionRow, directionCol));
+    }
+
+    private bool UsesSilverDirection(Carpet carpet)
+    {
+        if (carpet == null || string.IsNullOrEmpty(carpet.color))
+        {
+            return false;
+        }
+
+        List<Carpet> sameColor = state.carpets
+            .Where(c => c.alive && c.color == carpet.color)
+            .OrderBy(c => c.id)
+            .ToList();
+        return sameColor.Count >= 2 && sameColor[0].id != carpet.id;
+    }
+
+    private Vector2Int GetCarpetDirection(Carpet carpet)
+    {
+        if (carpet == null)
+        {
+            return new Vector2Int(0, 1);
+        }
+
+        if (carpet.hasMoveDirection && (carpet.lastDirectionRow != 0 || carpet.lastDirectionCol != 0))
+        {
+            return new Vector2Int(carpet.lastDirectionRow, carpet.lastDirectionCol);
+        }
+
+        int rowDelta = carpet.targetRow - carpet.row;
+        int colDelta = carpet.targetCol - carpet.col;
+        if (colDelta != 0)
+        {
+            return new Vector2Int(0, Math.Sign(colDelta));
+        }
+        if (rowDelta != 0)
+        {
+            return new Vector2Int(Math.Sign(rowDelta), 0);
+        }
+
+        return new Vector2Int(0, 1);
+    }
+
+    private static float DirectionAngle(int rowDelta, int colDelta)
+    {
+        if (colDelta > 0) return 180f;
+        if (rowDelta < 0) return 270f;
+        if (colDelta < 0) return 0f;
+        return 90f;
+    }
+
+    private static Transform FindChildRecursive(Transform root, string childName)
+    {
+        if (root == null)
+        {
+            return null;
+        }
+        if (root.name == childName)
+        {
+            return root;
+        }
+
+        foreach (Transform child in root)
+        {
+            Transform match = FindChildRecursive(child, childName);
+            if (match != null)
+            {
+                return match;
+            }
+        }
+
+        return null;
     }
 
     private void RenderPathOwnership(RectTransform cellRect, CellData cell, float size)
@@ -3106,6 +3315,9 @@ public sealed class CarpetGridGame : MonoBehaviour
         public string passColor = "";
         public bool alive = true;
         public int steps;
+        public bool hasMoveDirection;
+        public int lastDirectionRow;
+        public int lastDirectionCol;
         public List<MoveRecord> history = new List<MoveRecord>();
     }
 
