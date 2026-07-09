@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51070244d00c4f8faa20cdec872b54fa, type: 3}
   m_Name: BoardVisualConfig
   m_EditorClassIdentifier: 
-  overrideBoardBackgroundColor: 1
-  boardBackgroundColor: {r: 0.9009434, g: 0.93239, b: 1, a: 1}
-  boardBackgroundSprite: {fileID: 21300000, guid: 1dd59ce91014e7449868d0dbae116b96, type: 3}
+  overrideBackgroundColor: 1
+  backgroundColor: {r: 0.9009434, g: 0.93239, b: 1, a: 1}
+  backgroundSprite: {fileID: 21300000, guid: fa4dee7e32241fa4f91c20943c7e9d34, type: 3}
   boardCellSprite: {fileID: 21300000, guid: 8eadd85b8c9c430aadf5b5a901fd2d7d, type: 3}
   overrideCellTint: 1
   cellTint: {r: 1, g: 1, b: 1, a: 1}

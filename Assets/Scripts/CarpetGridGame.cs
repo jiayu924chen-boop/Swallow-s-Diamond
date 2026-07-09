@@ -211,9 +211,6 @@ public sealed class CarpetGridGame : MonoBehaviour
         rootLayout.childControlHeight = true;
         rootLayout.childForceExpandWidth = true;
         rootLayout.childForceExpandHeight = false;
-        Image rootBg = root.gameObject.AddComponent<Image>();
-        rootBg.color = sceneBackgroundColor;
-        ApplySprite(rootBg, sceneBackgroundSprite);
 
         RectTransform center = CreatePanel(root, "棋盘区", -1, -1);
         EnsureLayoutElement(center.gameObject).flexibleHeight = 1;
@@ -539,8 +536,8 @@ public sealed class CarpetGridGame : MonoBehaviour
     {
         RectTransform scroll = AddRect("BoardScroll", parent);
         Image bg = scroll.gameObject.AddComponent<Image>();
-        bg.color = boardBackgroundColor;
-        ApplySprite(bg, boardBackgroundSprite);
+        bg.color = Color.clear;
+        bg.sprite = null;
         bg.raycastTarget = false;
         scroll.gameObject.AddComponent<RectMask2D>();
         ScrollRect scrollRect = scroll.gameObject.AddComponent<ScrollRect>();
@@ -1000,13 +997,15 @@ public sealed class CarpetGridGame : MonoBehaviour
             return;
         }
 
-        if (config.overrideBoardBackgroundColor)
+        if (config.overrideBackgroundColor)
         {
-            boardBackgroundColor = config.boardBackgroundColor;
+            sceneBackgroundColor = config.backgroundColor;
+            boardBackgroundColor = config.backgroundColor;
         }
-        if (config.boardBackgroundSprite != null)
+        if (config.backgroundSprite != null)
         {
-            boardBackgroundSprite = config.boardBackgroundSprite;
+            sceneBackgroundSprite = config.backgroundSprite;
+            boardBackgroundSprite = config.backgroundSprite;
         }
         if (config.boardCellSprite != null)
         {
