@@ -80,6 +80,7 @@ public sealed class IntroSceneController : MonoBehaviour
 
     private void Awake()
     {
+        AudioManager.EnsureExists();
         CarpetBgmPlayer.EnsurePlaying();
         uiFont = LoadUiFont();
         config = LoadConfig();
