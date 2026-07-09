@@ -2523,6 +2523,22 @@ PrefabInstance:
       propertyPath: m_TargetGraphic
       value: 
       objectReference: {fileID: 2049869805506562798}
+    - target: {fileID: 1030454543011062755, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 36de6fd586fd3c048b6e6cca30da2061, type: 3}
+    - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2781727904309002041, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3762389816084434201, guid: 8f5d716c9f049b146a21052388b8765f, type: 3}
       propertyPath: m_Name
       value: ChapterButton1
