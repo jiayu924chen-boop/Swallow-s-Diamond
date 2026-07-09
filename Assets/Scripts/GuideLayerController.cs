@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public sealed class GuideLayerController : MonoBehaviour
 {
     [SerializeField] private Button nextButton;
+    [SerializeField] private GameObject mask;
     [SerializeField] private GameObject guideBox;
     [SerializeField] private Text guideText;
     [SerializeField] private GuideDialogueBinding[] dialogues = Array.Empty<GuideDialogueBinding>();
@@ -35,6 +36,10 @@ public sealed class GuideLayerController : MonoBehaviour
         if (guideBox != null)
         {
             guideBox.SetActive(true);
+        }
+        if (mask != null)
+        {
+            mask.SetActive(true);
         }
         if (nextButton != null)
         {
@@ -83,6 +88,10 @@ public sealed class GuideLayerController : MonoBehaviour
         {
             guideBox.SetActive(false);
         }
+        if (mask != null)
+        {
+            mask.SetActive(false);
+        }
     }
 
     private GuideDialogueConfig FindDialogue(GuideTextType guideType)
@@ -98,6 +107,7 @@ public sealed class GuideLayerController : MonoBehaviour
         nextButton = nextButton != null ? nextButton : GetComponent<Button>();
         guideBox = guideBox != null ? guideBox : FindChild("GuideBox")?.gameObject;
         guideText = guideText != null ? guideText : (guideBox != null ? guideBox.GetComponentInChildren<Text>(true) : GetComponentInChildren<Text>(true));
+        mask = mask != null ? mask : FindChild("Mask")?.gameObject;
 
         if (nextButton != null)
         {

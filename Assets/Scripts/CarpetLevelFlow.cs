@@ -12,11 +12,31 @@ public static class CarpetLevelFlow
 
     private static CarpetSceneTransitionRunner runner;
     private static bool transitionInProgress;
+    private static bool hasPendingMenuGuide;
+    private static GuideTextType pendingMenuGuideType;
 
     public static int RequestedLevel { get; private set; }
     public static int RequestedButtonIndex { get; private set; } = -1;
 
     public static bool IsTransitioning => transitionInProgress;
+
+    public static void RequestMenuGuide(GuideTextType guideType)
+    {
+        hasPendingMenuGuide = true;
+        pendingMenuGuideType = guideType;
+    }
+
+    public static bool TryConsumePendingMenuGuide(out GuideTextType guideType)
+    {
+        guideType = pendingMenuGuideType;
+        if (!hasPendingMenuGuide)
+        {
+            return false;
+        }
+
+        hasPendingMenuGuide = false;
+        return true;
+    }
 
     public static void StartLevel(int buttonIndex, int level)
     {

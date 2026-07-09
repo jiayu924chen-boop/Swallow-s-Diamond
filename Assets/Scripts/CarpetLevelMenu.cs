@@ -141,6 +141,23 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         BindExistingUi();
     }
 
+    private void Start()
+    {
+        if (!CarpetLevelFlow.TryConsumePendingMenuGuide(out GuideTextType guideType))
+        {
+            return;
+        }
+
+        GuideLayerController guideLayer = GetComponentInChildren<GuideLayerController>(true);
+        if (guideLayer == null)
+        {
+            Debug.LogWarning("CarpetLevelMenu guide layer is missing.");
+            return;
+        }
+
+        guideLayer.StartGuide(guideType);
+    }
+
     private void ApplyJsonConfig()
     {
         string path = Path.Combine(Application.streamingAssetsPath, ConfigPath);
