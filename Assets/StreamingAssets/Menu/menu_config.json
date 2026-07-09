@@ -40,7 +40,8 @@
                         "label":  "章节三",
                         "levels":  [
                                        7,
-                                       8
+                                       8,
+                                       9
                                    ],
                         "position":  {
                                          "x":  0.0,
@@ -55,7 +56,9 @@
                     {
                         "label":  "章节四",
                         "levels":  [
-                                       9
+                                       10,
+                                       11,
+                                       12
                                    ],
                         "position":  {
                                          "x":  0.0,
@@ -70,7 +73,7 @@
                     {
                         "label":  "章节五",
                         "levels":  [
-                                       10
+                                       13
                                    ],
                         "position":  {
                                          "x":  0.0,
@@ -137,10 +140,6 @@
                                                  "y":  0.0
                                              },
                             "shadowScale":  {
-                                                "x":  1.0,
-                                                "y":  1.0
-                                            },
-                            "shadowColor":  "#1a121466",
                             "animationFrames":  [
 
                                                 ],
@@ -159,6 +158,7 @@
                             "breathSeconds":  3.4,
                             "frameFadeSeconds":  0
                         }
+                    }
                     ],
     "animations":  [
 

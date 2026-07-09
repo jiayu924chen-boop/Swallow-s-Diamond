@@ -1,0 +1,116 @@
+{
+  "rows": 15,
+  "cols": 15,
+  "carpets": [
+    {
+      "id": 1,
+      "row": 10,
+      "col": 3,
+      "targetRow": 10,
+      "targetCol": 8,
+      "length": 6,
+      "color": "#4b75d1",
+      "groupId": "1",
+      "passColor": ""
+    },
+    {
+      "id": 2,
+      "row": 9,
+      "col": 4,
+      "targetRow": 9,
+      "targetCol": 9,
+      "length": 6,
+      "color": "#4b75d1",
+      "groupId": "1",
+      "passColor": ""
+    },
+    {
+      "id": 3,
+      "row": 8,
+      "col": 5,
+      "targetRow": 8,
+      "targetCol": 10,
+      "length": 6,
+      "color": "#4b75d1",
+      "groupId": "1",
+      "passColor": ""
+    },
+    {
+      "id": 4,
+      "row": 7,
+      "col": 6,
+      "targetRow": 7,
+      "targetCol": 10,
+      "length": 4,
+      "color": "#4b75d1",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 5,
+      "row": 6,
+      "col": 7,
+      "targetRow": 6,
+      "targetCol": 10,
+      "length": 3,
+      "color": "#4b75d1",
+      "groupId": "2",
+      "passColor": ""
+    },
+    {
+      "id": 6,
+      "row": 5,
+      "col": 8,
+      "targetRow": 5,
+      "targetCol": 11,
+      "length": 3,
+      "color": "#4b75d1",
+      "groupId": "2",
+      "passColor": ""
+    },
+    {
+      "id": 7,
+      "row": 4,
+      "col": 8,
+      "targetRow": 4,
+      "targetCol": 10,
+      "length": 2,
+      "color": "#4b75d1",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 8,
+      "row": 6,
+      "col": 3,
+      "targetRow": 6,
+      "targetCol": 4,
+      "length": 1,
+      "color": "#4b75d1",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 9,
+      "row": 7,
+      "col": 4,
+      "targetRow": 6,
+      "targetCol": 5,
+      "length": 1,
+      "color": "#4b75d1",
+      "groupId": "",
+      "passColor": ""
+    },
+    {
+      "id": 10,
+      "row": 4,
+      "col": 3,
+      "targetRow": 4,
+      "targetCol": 5,
+      "length": 2,
+      "color": "#4b75d1",
+      "groupId": "",
+      "passColor": ""
+    }
+  ]
+}
