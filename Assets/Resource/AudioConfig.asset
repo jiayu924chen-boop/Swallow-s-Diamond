@@ -15,3 +15,5 @@ MonoBehaviour:
   entries:
   - soundType: bgm
     clip: {fileID: 8300000, guid: 6b194a4b91f94efa98e332624e858357, type: 3}
+  - soundType: bgm
+    clip: {fileID: 8300000, guid: 6b194a4b91f94efa98e332624e858357, type: 3}

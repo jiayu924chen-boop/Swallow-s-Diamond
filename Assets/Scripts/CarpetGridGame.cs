@@ -17,8 +17,10 @@ public sealed class CarpetGridGame : MonoBehaviour
     private const string GuildPopupResourceFolder = "Prefabs/Guild";
     private const string GuildPopupSaveKeyPrefix = "swallow-diamond-guild-popup-";
     private const float DragStartThresholdPixels = 10f;
-    private const float DragStepInterval = 0.055f;
-    private const float MoveAnimationDuration = 0.13f;
+    private const float DragRetryInterval = 0.08f;
+    private const float MoveAnimationDuration = 0.18f;
+    private const float UndoMoveAnimationDuration = 0.09f;
+    private const float DownAnimationDuration = 0.55f;
     private const float ActiveCarpetScale = 1.08f;
     private const int ProceduralBoardCellSize = 64;
     private const float DiamondInsetScale = 0.82f;
@@ -82,7 +84,9 @@ public sealed class CarpetGridGame : MonoBehaviour
     private readonly GameState state = new GameState();
     private readonly Dictionary<int, LevelData> savedLevels = new Dictionary<int, LevelData>();
     private readonly Dictionary<int, CarpetMotion> pendingMotions = new Dictionary<int, CarpetMotion>();
+    private readonly Dictionary<int, DiamondAnimationTrigger> pendingDiamondAnimations = new Dictionary<int, DiamondAnimationTrigger>();
     private readonly Dictionary<string, float> pendingPathReveals = new Dictionary<string, float>();
+    private readonly Dictionary<string, float> activePathDiamondAnimations = new Dictionary<string, float>();
     private readonly Dictionary<string, Sprite> proceduralBoardCellSprites = new Dictionary<string, Sprite>();
     private bool renderQueued;
 
@@ -726,7 +730,7 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void RestartCurrentLevel()
     {
-        CarpetLevelFlow.ResetGameAndReturnToIntro();
+        ResetCurrentLevel();
     }
 
     private void TryShowGuildPopupForLevel(int level)
@@ -1386,7 +1390,9 @@ public sealed class CarpetGridGame : MonoBehaviour
     private void ResetPaintToCarpetPositions(string message)
     {
         pendingMotions.Clear();
+        pendingDiamondAnimations.Clear();
         pendingPathReveals.Clear();
+        activePathDiamondAnimations.Clear();
         foreach (CellData cell in state.cells)
         {
             cell.color = "";
@@ -1421,7 +1427,9 @@ public sealed class CarpetGridGame : MonoBehaviour
         state.nextDragStepTime = 0f;
         state.victory = false;
         pendingMotions.Clear();
+        pendingDiamondAnimations.Clear();
         pendingPathReveals.Clear();
+        activePathDiamondAnimations.Clear();
         foreach (Carpet carpet in state.carpets)
         {
             carpet.history.Clear();
@@ -1657,7 +1665,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         int beforeCol = carpet.col;
         MoveActiveTo(nextRow, nextCol);
         bool moved = carpet.row != beforeRow || carpet.col != beforeCol;
-        state.nextDragStepTime = Time.unscaledTime + (moved ? DragStepInterval : DragStepInterval * 1.5f);
+        state.nextDragStepTime = Time.unscaledTime + (moved ? 0f : DragRetryInterval);
     }
 
     private void MoveActiveTo(int row, int col)
@@ -1822,7 +1830,7 @@ public sealed class CarpetGridGame : MonoBehaviour
             CancelPathReveal(carpet.row, carpet.col, carpet.id);
             current.color = lastMove.previousColor ?? "";
             current.owner = lastMove.previousOwner;
-            QueueCarpetMotion(carpet.id, carpet.row, carpet.col, lastMove.fromRow, lastMove.fromCol);
+            QueueCarpetMotion(carpet.id, carpet.row, carpet.col, lastMove.fromRow, lastMove.fromCol, UndoMoveAnimationDuration);
             SetLastMoveDirection(carpet, lastMove.fromRow - carpet.row, lastMove.fromCol - carpet.col);
             carpet.row = lastMove.fromRow;
             carpet.col = lastMove.fromCol;
@@ -1833,6 +1841,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         }
 
         CellData target = GetCell(row, col);
+        bool movedToEmptyCell = target != null && string.IsNullOrEmpty(target.color);
         carpet.history.Add(new MoveRecord
         {
             fromRow = carpet.row,
@@ -1854,12 +1863,18 @@ public sealed class CarpetGridGame : MonoBehaviour
             QueuePathReveal(row, col, carpet.id);
         }
 
-        QueueCarpetMotion(carpet.id, carpet.row, carpet.col, row, col);
+        QueueCarpetMotion(carpet.id, carpet.row, carpet.col, row, col, MoveAnimationDuration);
         SetLastMoveDirection(carpet, row - carpet.row, col - carpet.col);
         carpet.row = row;
         carpet.col = col;
         carpet.length -= info.cost;
         carpet.steps += info.cost;
+        DiamondAnimationTrigger animationTrigger = DiamondAnimationTrigger.None;
+        if (movedToEmptyCell)
+        {
+            animationTrigger = DiamondAnimationTrigger.Down;
+        }
+        QueueDiamondAnimation(carpet.id, animationTrigger);
         return true;
     }
 
@@ -1912,6 +1927,7 @@ public sealed class CarpetGridGame : MonoBehaviour
             OccupiesDistinctTargetCells(playable);
         if (won && announce && !state.victory)
         {
+            QueueVictoryDiamondAnimations(playable);
             SetToast("胜利！所有地毯都铺到目标了。");
             if (state.mode == GameMode.Play)
             {
@@ -1919,6 +1935,14 @@ public sealed class CarpetGridGame : MonoBehaviour
             }
         }
         state.victory = won;
+    }
+
+    private void QueueVictoryDiamondAnimations(IEnumerable<Carpet> carpets)
+    {
+        foreach (Carpet carpet in carpets)
+        {
+            QueueDiamondAnimation(carpet.id, DiamondAnimationTrigger.Target);
+        }
     }
 
     private void ReturnToLevelMenu()
@@ -2034,7 +2058,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         return row + "," + col;
     }
 
-    private void QueueCarpetMotion(int carpetId, int fromRow, int fromCol, int toRow, int toCol)
+    private void QueueCarpetMotion(int carpetId, int fromRow, int fromCol, int toRow, int toCol, float duration)
     {
         if (fromRow == toRow && fromCol == toCol)
         {
@@ -2046,8 +2070,20 @@ public sealed class CarpetGridGame : MonoBehaviour
             fromRow = fromRow,
             fromCol = fromCol,
             toRow = toRow,
-            toCol = toCol
+            toCol = toCol,
+            duration = Mathf.Max(0.01f, duration)
         };
+    }
+
+    private void QueueDiamondAnimation(int carpetId, DiamondAnimationTrigger trigger)
+    {
+        if (trigger == DiamondAnimationTrigger.None)
+        {
+            pendingDiamondAnimations.Remove(carpetId);
+            return;
+        }
+
+        pendingDiamondAnimations[carpetId] = trigger;
     }
 
     private static void SetLastMoveDirection(Carpet carpet, int rowDelta, int colDelta)
@@ -2064,17 +2100,21 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void QueuePathReveal(int row, int col, int owner)
     {
-        pendingPathReveals[PathRevealKey(row, col, owner)] = Time.unscaledTime + MoveAnimationDuration;
+        string key = PathRevealKey(row, col, owner);
+        pendingPathReveals.Remove(key);
+        activePathDiamondAnimations[key] = Time.unscaledTime;
     }
 
     private void CancelPathReveal(int row, int col, int owner)
     {
-        pendingPathReveals.Remove(PathRevealKey(row, col, owner));
+        string key = PathRevealKey(row, col, owner);
+        pendingPathReveals.Remove(key);
+        activePathDiamondAnimations.Remove(key);
     }
 
     private void UpdatePathRevealTimers()
     {
-        if (pendingPathReveals.Count == 0)
+        if (pendingPathReveals.Count == 0 && activePathDiamondAnimations.Count == 0)
         {
             return;
         }
@@ -2084,7 +2124,11 @@ public sealed class CarpetGridGame : MonoBehaviour
             .Where(pair => now >= pair.Value)
             .Select(pair => pair.Key)
             .ToList();
-        if (readyKeys.Count == 0)
+        List<string> completedAnimationKeys = activePathDiamondAnimations
+            .Where(pair => now - pair.Value >= DownAnimationDuration)
+            .Select(pair => pair.Key)
+            .ToList();
+        if (readyKeys.Count == 0 && completedAnimationKeys.Count == 0)
         {
             return;
         }
@@ -2093,6 +2137,12 @@ public sealed class CarpetGridGame : MonoBehaviour
         {
             pendingPathReveals.Remove(key);
         }
+
+        foreach (string key in completedAnimationKeys)
+        {
+            activePathDiamondAnimations.Remove(key);
+        }
+
         RequestRender();
     }
 
@@ -2242,7 +2292,9 @@ public sealed class CarpetGridGame : MonoBehaviour
         if (state.cells.Count == 0)
         {
             pendingMotions.Clear();
+            pendingDiamondAnimations.Clear();
             pendingPathReveals.Clear();
+            activePathDiamondAnimations.Clear();
             boardContent.sizeDelta = new Vector2(300, 200);
             boardContent.anchoredPosition = Vector2.zero;
             AddLabel(boardContent, "请选择数字 JSON 关卡", 22, FontStyle.Bold, Hex("#77716a"), 120);
@@ -2291,7 +2343,6 @@ public sealed class CarpetGridGame : MonoBehaviour
                 Image pieceGraphic = piece.gameObject.AddComponent<Image>();
                 pieceGraphic.color = new Color(1f, 1f, 1f, 0f);
                 pieceGraphic.raycastTarget = false;
-                AddDiamondPrefabVisual(piece, carpet, pieceSize);
                 bool isActive = carpet.id == state.activeId;
                 Vector2 startPosition = settledPosition;
                 CarpetMotion motion;
@@ -2300,7 +2351,18 @@ public sealed class CarpetGridGame : MonoBehaviour
                     startPosition += CellVisualOffset(motion.fromRow, motion.fromCol, carpet.row, carpet.col, pitch);
                     pendingMotions.Remove(carpet.id);
                 }
-                piece.gameObject.AddComponent<CarpetPieceMotion>().Play(startPosition, settledPosition, MoveAnimationDuration, isActive ? ActiveCarpetScale : 1f);
+                DiamondAnimationTrigger diamondAnimation;
+                if (!pendingDiamondAnimations.TryGetValue(carpet.id, out diamondAnimation))
+                {
+                    diamondAnimation = DiamondAnimationTrigger.None;
+                }
+                else
+                {
+                    pendingDiamondAnimations.Remove(carpet.id);
+                }
+                AddDiamondPrefabVisual(piece, carpet, pieceSize, false, diamondAnimation);
+                float moveDuration = motion != null ? motion.duration : MoveAnimationDuration;
+                piece.gameObject.AddComponent<CarpetPieceMotion>().Play(startPosition, settledPosition, moveDuration, isActive ? ActiveCarpetScale : 1f);
 
                 if (state.mode == GameMode.Edit)
                 {
@@ -2316,6 +2378,7 @@ public sealed class CarpetGridGame : MonoBehaviour
             }
         }
         pendingMotions.Clear();
+        pendingDiamondAnimations.Clear();
     }
 
     private void RenderTargetCornerTriangles(RectTransform cellRect, int row, int col, float size)
@@ -2386,7 +2449,8 @@ public sealed class CarpetGridGame : MonoBehaviour
             direction = pathDirection;
         }
 
-        AddDiamondPrefabVisual(diamond, cell.color, cell.color, diamondSize, "", owner != null, owner != null && UsesSilverDirection(owner), direction.x, direction.y, false, false);
+        GameObject visual = AddDiamondPrefabVisual(diamond, cell.color, cell.color, diamondSize, "", owner != null, owner != null && UsesSilverDirection(owner), direction.x, direction.y, false, false);
+        PlayActivePathDiamondAnimation(visual, cell);
     }
 
     private void AddDiamondHighlight(RectTransform parent, float size)
@@ -2447,7 +2511,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         return diamondHighlightSprite;
     }
 
-    private void AddDiamondPrefabVisual(RectTransform parent, Carpet carpet, float size, bool forceMainColor = false)
+    private GameObject AddDiamondPrefabVisual(RectTransform parent, Carpet carpet, float size, bool forceMainColor = false, DiamondAnimationTrigger animationTrigger = DiamondAnimationTrigger.None)
     {
         Vector2Int direction = GetCarpetDirection(carpet);
         bool showDirection = !forceMainColor;
@@ -2455,21 +2519,22 @@ public sealed class CarpetGridGame : MonoBehaviour
         bool showSmallDiamond = !string.IsNullOrEmpty(carpet.passColor);
         bool showOutline = !string.IsNullOrEmpty(carpet.groupId);
         string outerColor = showSmallDiamond ? carpet.passColor : carpet.color;
-        AddDiamondPrefabVisual(
+        return AddDiamondPrefabVisual(
             parent,
             outerColor,
             carpet.color,
             size,
-            forceMainColor ? "" : carpet.length.ToString(),
+            forceMainColor || carpet.length <= 0 ? "" : carpet.length.ToString(),
             showDirection,
             useSilver,
             direction.x,
             direction.y,
             showSmallDiamond,
-            showOutline);
+            showOutline,
+            animationTrigger);
     }
 
-    private void AddDiamondPrefabVisual(RectTransform parent, string outerColorHex, string mainColorHex, float size, string textValue, bool showDirection, bool useSilver, int directionRow, int directionCol, bool showSmallDiamond, bool showOutline)
+    private GameObject AddDiamondPrefabVisual(RectTransform parent, string outerColorHex, string mainColorHex, float size, string textValue, bool showDirection, bool useSilver, int directionRow, int directionCol, bool showSmallDiamond, bool showOutline, DiamondAnimationTrigger animationTrigger = DiamondAnimationTrigger.None)
     {
         GameObject prefab = GetDiamondPrefab();
         if (prefab == null)
@@ -2479,7 +2544,7 @@ public sealed class CarpetGridGame : MonoBehaviour
             fallbackImage.raycastTarget = false;
             ApplySprite(fallbackImage, carpetSprite);
             AddDiamondHighlight(parent, size);
-            return;
+            return parent.gameObject;
         }
 
         GameObject visual = Instantiate(prefab, parent, false);
@@ -2510,6 +2575,56 @@ public sealed class CarpetGridGame : MonoBehaviour
         SetDiamondLayerVisible(visual.transform, "40_Outline", showOutline);
         UpdateDiamondText(visual.transform, textValue);
         UpdateDiamondDirectionDecorations(visual.transform, showDirection, useSilver, directionRow, directionCol);
+        TriggerDiamondAnimation(visual, animationTrigger);
+        return visual;
+    }
+
+    private void PlayActivePathDiamondAnimation(GameObject visual, CellData cell)
+    {
+        if (visual == null || cell == null || cell.owner < 0)
+        {
+            return;
+        }
+
+        string key = PathRevealKey(cell.row, cell.col, cell.owner);
+        if (!activePathDiamondAnimations.TryGetValue(key, out float startedAt))
+        {
+            return;
+        }
+
+        float elapsed = Time.unscaledTime - startedAt;
+        if (elapsed >= DownAnimationDuration)
+        {
+            activePathDiamondAnimations.Remove(key);
+            return;
+        }
+
+        Animator animator = visual.GetComponentInChildren<Animator>(true);
+        if (animator == null)
+        {
+            return;
+        }
+
+        animator.Play("down", 0, Mathf.Clamp01(elapsed / DownAnimationDuration));
+        animator.Update(0f);
+    }
+
+    private static void TriggerDiamondAnimation(GameObject visual, DiamondAnimationTrigger trigger)
+    {
+        if (visual == null || trigger == DiamondAnimationTrigger.None)
+        {
+            return;
+        }
+
+        Animator animator = visual.GetComponentInChildren<Animator>(true);
+        if (animator == null)
+        {
+            return;
+        }
+
+        animator.ResetTrigger("down");
+        animator.ResetTrigger("target");
+        animator.SetTrigger(trigger == DiamondAnimationTrigger.Target ? "target" : "down");
     }
 
     private GameObject GetDiamondPrefab()
@@ -3563,6 +3678,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         public int fromCol;
         public int toRow;
         public int toCol;
+        public float duration;
     }
 
     private enum GameMode
@@ -3574,6 +3690,13 @@ public sealed class CarpetGridGame : MonoBehaviour
     private enum EditTool
     {
         Carpet,
+        Target
+    }
+
+    private enum DiamondAnimationTrigger
+    {
+        None,
+        Down,
         Target
     }
 }
