@@ -1369,7 +1369,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         {
             for (int col = 0; col < cols; col++)
             {
-                result.Add(new CellData { row = row, col = col, color = "", owner = -1 });
+                result.Add(new CellData { row = row, col = col, color = "", owner = -1, firstOwner = -1 });
             }
         }
         return result;
@@ -1383,6 +1383,10 @@ public sealed class CarpetGridGame : MonoBehaviour
             if (cell == null)
             {
                 continue;
+            }
+            if (cell.firstOwner < 0)
+            {
+                cell.firstOwner = carpet.id;
             }
             cell.color = carpet.color;
             cell.owner = carpet.id;
@@ -1399,6 +1403,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         {
             cell.color = "";
             cell.owner = -1;
+            cell.firstOwner = -1;
         }
         foreach (Carpet carpet in state.carpets)
         {
@@ -1810,12 +1815,6 @@ public sealed class CarpetGridGame : MonoBehaviour
         }
 
         CellData target = GetCell(row, col);
-        Carpet borrowDependency = FindBorrowDependency(carpet, row, col);
-        if (borrowDependency != null)
-        {
-            return MoveInfo.Blocked("Another carpet is already borrowing this cell.");
-        }
-
         if (IsDifferentColorCell(target, carpet))
         {
             return MoveInfo.Blocked("异色地块无法覆盖。");
@@ -1846,6 +1845,7 @@ public sealed class CarpetGridGame : MonoBehaviour
                 {
                     current.color = lastMove.previousColor ?? "";
                     current.owner = lastMove.previousOwner;
+                    current.firstOwner = lastMove.previousFirstOwner;
                 }
                 else
                 {
@@ -1872,8 +1872,9 @@ public sealed class CarpetGridGame : MonoBehaviour
             toCol = col,
             previousColor = target.color,
             previousOwner = target.owner,
+            previousFirstOwner = target.firstOwner,
             borrowedColor = info.cost == 0 ? target.color : "",
-            borrowedOwner = info.cost == 0 ? target.owner : -1,
+            borrowedOwner = info.cost == 0 ? GetDependencyOwner(target) : -1,
             carpetId = carpet.id,
             cost = info.cost
         });
@@ -1882,6 +1883,10 @@ public sealed class CarpetGridGame : MonoBehaviour
         {
             target.color = carpet.color;
             target.owner = carpet.id;
+            if (target.firstOwner < 0)
+            {
+                target.firstOwner = carpet.id;
+            }
             QueuePathReveal(row, col, carpet.id);
         }
 
@@ -2010,7 +2015,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         return state.carpets.Where(c => c.alive && c.groupId == carpet.groupId).ToList();
     }
 
-    private bool IsBorrowMove(MoveRecord move, int row, int col)
+    private bool IsBorrowMoveFromOwner(MoveRecord move, int row, int col, int ownerId)
     {
         if (move == null || move.cost != 0 || move.toRow != row || move.toCol != col)
         {
@@ -2018,15 +2023,32 @@ public sealed class CarpetGridGame : MonoBehaviour
         }
         string color = string.IsNullOrEmpty(move.borrowedColor) ? move.previousColor : move.borrowedColor;
         int owner = move.borrowedOwner >= 0 ? move.borrowedOwner : move.previousOwner;
-        return !string.IsNullOrEmpty(color) && owner != move.carpetId;
+        if (string.IsNullOrEmpty(color) || owner == move.carpetId)
+        {
+            return false;
+        }
+        return ownerId < 0 || owner == ownerId;
     }
 
     private Carpet FindBorrowDependency(Carpet ownerCarpet, int row, int col)
     {
+        if (ownerCarpet == null)
+        {
+            return null;
+        }
         return state.carpets.FirstOrDefault(c =>
             c.alive &&
             c.id != ownerCarpet.id &&
-            c.history.Any(move => IsBorrowMove(move, row, col)));
+            c.history.Any(move => IsBorrowMoveFromOwner(move, row, col, ownerCarpet.id)));
+    }
+
+    private static int GetDependencyOwner(CellData cell)
+    {
+        if (cell == null)
+        {
+            return -1;
+        }
+        return cell.firstOwner >= 0 ? cell.firstOwner : cell.owner;
     }
 
     private bool IsPassableSameColorEnd(Carpet occupant, Carpet carpet)
@@ -3611,6 +3633,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         public int col;
         public string color = "";
         public int owner = -1;
+        public int firstOwner = -1;
     }
 
     [Serializable]
@@ -3642,6 +3665,7 @@ public sealed class CarpetGridGame : MonoBehaviour
         public int toCol;
         public string previousColor = "";
         public int previousOwner = -1;
+        public int previousFirstOwner = -1;
         public string borrowedColor = "";
         public int borrowedOwner = -1;
         public int carpetId;
