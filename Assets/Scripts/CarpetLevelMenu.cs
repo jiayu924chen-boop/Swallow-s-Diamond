@@ -147,6 +147,29 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    public static bool HasStartedGameProgress()
+    {
+        if (PlayerPrefs.GetInt(FirstChapterUnlockedKey, 0) != 0)
+        {
+            return true;
+        }
+
+        for (int i = 0; i < buttonProgress.Length; i++)
+        {
+            if (PlayerPrefs.GetInt(ProgressKeyPrefix + i, 0) > 0)
+            {
+                return true;
+            }
+
+            if (PlayerPrefs.GetInt(ChapterStateKeyPrefix + i, ChapterStateLocked) != ChapterStateLocked)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static void RefreshMenuState()
     {
         if (instance == null)

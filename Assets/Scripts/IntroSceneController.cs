@@ -222,7 +222,7 @@ public sealed class IntroSceneController : MonoBehaviour
 
         Button button = buttonRect.gameObject.AddComponent<Button>();
         button.targetGraphic = buttonGraphic;
-        button.onClick.AddListener(StartStory);
+        button.onClick.AddListener(HandleStartGame);
     }
 
     private void BuildStoryContent(RectTransform root)
@@ -284,13 +284,24 @@ public sealed class IntroSceneController : MonoBehaviour
         }
     }
 
-    private void StartStory()
+    private void HandleStartGame()
     {
         if (state != IntroState.Landing)
         {
             return;
         }
 
+        if (CarpetLevelMenu.HasStartedGameProgress())
+        {
+            CarpetLevelFlow.EnterMenuFromIntro();
+            return;
+        }
+
+        StartStory();
+    }
+
+    private void StartStory()
+    {
         titleLayer.gameObject.SetActive(false);
         overlayLayer.gameObject.SetActive(true);
         pageIndex = 0;
