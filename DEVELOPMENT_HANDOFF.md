@@ -182,6 +182,7 @@ flowchart TD
 - 剧情文本以逐字效果显示。
 - 剧情结束后点击播放 `intro_video.mp4`。
 - 视频播放完成后显示过渡层并加载 `LevelSelectMenu`。
+- 切到主界面前会通过 `CarpetLevelFlow.RequestMenuGuide(GuideTextType.StartGame)` 预约一次开场引导气泡。
 - 视频无法准备时，8 秒超时后跳过视频进入过渡层。
 - 视频音频输出被关闭，BGM 由 `CarpetBgmPlayer` 全局播放。
 
@@ -286,7 +287,7 @@ flowchart TD
 
 主界面由 `CarpetLevelMenu` 完成：
 
-- 自动创建菜单 Canvas。
+- 场景加载时优先实例化 `Resources/Prefabs/Carpet Level Menu`，绑定现有 UI 节点；旧版动态造 UI 逻辑仍保留在代码里作为兜底。
 - 读取 `menu_config.json`，最多取前 4 个按钮。
 - 每个按钮对应一个章节和一组线性关卡。
 - `PlayerPrefs` 保存每个章节已完成关卡数量。
@@ -295,6 +296,7 @@ flowchart TD
 - 当前章节按钮点击后进入该章节当前进度关卡。
 - 完成的章节按钮显示已完成且禁用。
 - 未解锁章节按钮显示未解锁且禁用。
+- 菜单 `Start()` 会尝试消费 `CarpetLevelFlow` 暂存的引导类型，并驱动 `GuideLayerController` 弹出引导气泡。
 - 设置面板支持音效、声音、震动开关，以及重置游戏。
 
 ### 4.2 当前代码分层
@@ -302,8 +304,9 @@ flowchart TD
 | 层 | 当前类 | 说明 |
 | --- | --- | --- |
 | Data | `MenuConfig`、`MenuButtonConfig`、`MenuDecorationConfig`、`MenuAnimationConfig` | 菜单 JSON 配置 |
-| Controller | `CarpetLevelMenu`、`CarpetLevelFlow` | 章节状态判断、进度保存、开始关卡、重置进度 |
-| View | 动态 Canvas、章节 Button、设置面板、装饰图、帧动画 | 菜单实际显示 |
+| Data | `GuideDialogueConfig`、`GuideTextType` | 引导文案资产与引导类型枚举 |
+| Controller | `CarpetLevelMenu`、`CarpetLevelFlow`、`GuideLayerController` | 章节状态判断、进度保存、开始关卡、引导弹层驱动 |
+| View | 菜单预制体、章节 Button、设置面板、装饰图、帧动画、引导遮罩/气泡 | 菜单实际显示 |
 
 ### 4.3 核心类与属性方法
 
@@ -353,6 +356,7 @@ flowchart TD
 | `RequestedLevel` | 即将进入的关卡号 |
 | `RequestedButtonIndex` | 发起关卡的章节按钮索引 |
 | `IsTransitioning` | 防止重复加载场景 |
+| `pendingMenuGuideType` | 切场景时暂存一次菜单引导类型 |
 
 核心方法：
 
@@ -360,9 +364,19 @@ flowchart TD
 | --- | --- |
 | `StartLevel(buttonIndex, level)` | 记录章节索引和关卡号，加载 `Main` |
 | `ConsumeRequestedLevel()` | `Main` 场景启动时读取并清空请求关卡 |
+| `RequestMenuGuide(guideType)` | 预约下一次进入菜单时要显示的引导文案 |
+| `TryConsumePendingMenuGuide(out guideType)` | 菜单启动时读取并清空预约引导 |
 | `CompleteActiveLevelAndReturn()` | 通关后推进章节进度并回菜单 |
 | `ReturnToMenu()` | 不推进进度，直接回菜单 |
 | `ResetGameAndReturnToIntro()` | 清进度、重播 BGM、回 Intro |
+
+#### `GuideLayerController`
+
+当前菜单预制体中新增一层引导遮罩，依赖 `GuideLayerController` 管理：
+
+- `StartGuide(GuideTextType guideType)` 会按枚举查找 `GuideDialogueBinding[]` 中绑定的 `GuideDialogueConfig`。
+- `GuideDialogueConfig.lines` 当前按字符串数组存储逐条文案，点击 `nextButton` 顺序播放，播完后关闭遮罩和气泡。
+- 当前仓库已存在 `StartGameDialogue.asset` 与 `LevelFoueEndDialogue.asset` 两份文案资产，但代码里只有 `GuideTextType.StartGame` 在 `IntroSceneController` 中接入。
 
 ### 4.4 章节解锁流程图
 
@@ -1008,7 +1022,13 @@ Audio/perfect_beauty_bgm
 6. 开场与部分旧文案曾有编码问题  
    当前文档已重写为 UTF-8，但代码内部分字符串仍可见乱码。功能通常不受影响，但 UI 文案需要后续统一修复。
 
-7. 缺少自动化测试  
+7. 引导系统只接入了开场进入菜单这一条链路  
+   `GuideTextType` 已预留章节解锁、结尾等枚举值，但当前没有对应触发点；`LevelFoueEndDialogue.asset` 文件名也带拼写错误，后续扩展时要先统一命名和触发条件。
+
+8. 新菜单强依赖预制体命名与层级  
+   `CarpetLevelMenu` 会按 `Root`、`ButtonLayer`、`SettingsPanel`、`GuideBox`、`Mask` 等名字递归查找节点；UI 改层级或改名后，运行期会退化为告警或缺功能。
+
+9. 缺少自动化测试  
    当前未看到 Unity Test Runner 测试。移动规则复杂，建议优先补以下测试：普通移动、撤回、同色借道、指定异色借道、借道依赖、同组部分阻挡、胜利检测。
 
 ## 10. 建议的后续重构分层
@@ -1042,12 +1062,13 @@ Audio/perfect_beauty_bgm
 4. 点击未显示完的剧情，能立即补全文字。
 5. 剧情结束后再次点击，播放视频。
 6. 视频结束或失败后进入章节菜单。
-7. 初始状态只有章节一可点击，章节二到四禁用。
-8. 点击章节一进入关卡 1。
-9. 通关后自动返回菜单。
-10. 再次点击章节一进入关卡 2。
-11. 章节一全部完成后，章节一禁用并显示已完成，章节二解锁。
-12. 按同样方式推进章节二、三、四。
+7. 首次进入章节菜单时先弹出 `StartGameDialogue` 引导框，点击按钮可关闭。
+8. 初始状态只有章节一可点击，章节二到四禁用。
+9. 点击章节一进入关卡 1。
+10. 通关后自动返回菜单。
+11. 再次点击章节一进入关卡 2。
+12. 章节一全部完成后，章节一禁用并显示已完成，章节二解锁。
+13. 按同样方式推进章节二、三、四。
 
 ### 11.2 玩法规则验收
 
@@ -1086,3 +1107,11 @@ Audio/perfect_beauty_bgm
 - 补充 data/controller/view 职责分层说明。
 - 补充核心类、属性、方法、算法步骤和 Mermaid 流程图。
 - 明确当前代码真实限制：主玩法单类集中、章节数量硬编码、关卡双目录、重开按钮清全局进度、缺少自动化测试。
+
+### 2026-07-09 菜单引导与预制体同步
+
+- 模块影响：`IntroSceneController` 在开场视频结束后会预约菜单引导；`CarpetLevelMenu` 改为优先加载 `Resources/Prefabs/Carpet Level Menu` 并绑定场景现有节点；`CarpetLevelFlow` 新增菜单引导暂存状态。
+- 行为变化：玩家首次从开场进入主界面时，会先看到 `GuideLayerController` 驱动的引导气泡，再进行章节选择。
+- 数据与资源变化：新增 `GuideDialogueConfig`、`GuideTextType`、`GuideLayerController` 脚本；新增 `Assets/Resource/GuideDialogue/StartGameDialogue.asset`、`LevelFoueEndDialogue.asset`；主界面新增菜单预制体、章节按钮预制体和 `output_jianing.png` 角色图；`Packages/manifest.json` 新增 `com.unity.2d.sprite` 依赖。
+- 验收方式：从 `Intro.unity` 进入 Play，走完整个开场流程，确认主界面首次加载时出现引导框且可点击关闭，再验证章节按钮、设置按钮和装饰图都已绑定成功。
+- 接手风险：引导系统目前只消费 `StartGame` 文案，其他枚举和结尾文案尚未接线；菜单脚本对预制体命名和层级有隐式依赖，UI 调整时必须回归验证。
