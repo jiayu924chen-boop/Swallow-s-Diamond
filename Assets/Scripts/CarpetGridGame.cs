@@ -999,10 +999,11 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void ApplyGameArtConfig(int requestedLevel)
     {
+        ApplyBoardVisualConfig();
+
         string path = Path.Combine(Application.streamingAssetsPath, GameArtConfigPath);
         if (!File.Exists(path))
         {
-            ApplyBoardVisualConfig();
             return;
         }
 
@@ -1020,19 +1021,19 @@ public sealed class CarpetGridGame : MonoBehaviour
             {
                 ApplyChapterArtConfig(chapterConfig);
             }
-            ApplyBoardVisualConfig();
         }
         catch (Exception exception)
         {
             Debug.LogWarning("Failed to read game art config: " + exception.Message);
-            ApplyBoardVisualConfig();
         }
     }
 
     private void ApplyBaseArtConfig(GameArtConfig config)
     {
-        sceneBackgroundSprite = LoadSpriteResource(config.sceneBackground);
-        boardBackgroundSprite = LoadSpriteResource(config.boardBackground);
+        Sprite sprite = LoadSpriteResource(config.sceneBackground);
+        if (sprite != null) sceneBackgroundSprite = sprite;
+        sprite = LoadSpriteResource(config.boardBackground);
+        if (sprite != null) boardBackgroundSprite = sprite;
         boardCellSprite = LoadSpriteResource(config.boardCell);
         carpetSprite = LoadSpriteResource(config.carpet);
         targetSprite = LoadSpriteResource(config.target);
@@ -1376,12 +1377,8 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private void PaintCarpetStarts()
     {
-        foreach (Carpet carpet in state.carpets)
+        foreach (Carpet carpet in state.carpets.Where(c => c.alive).OrderBy(OverlapBottomToTopOrder).ThenByDescending(c => c.id))
         {
-            if (!carpet.alive)
-            {
-                continue;
-            }
             CellData cell = GetCell(carpet.row, carpet.col);
             if (cell == null)
             {
@@ -2075,12 +2072,30 @@ public sealed class CarpetGridGame : MonoBehaviour
 
     private Carpet CarpetAt(int row, int col, int exceptId)
     {
-        return state.carpets.FirstOrDefault(c => c.alive && c.id != exceptId && c.row == row && c.col == col);
+        return state.carpets
+            .Where(c => c.alive && c.id != exceptId && c.row == row && c.col == col)
+            .OrderBy(OverlapSelectionOrder)
+            .ThenBy(c => c.id)
+            .FirstOrDefault();
     }
 
     private List<Carpet> CarpetsAt(int row, int col)
     {
-        return state.carpets.Where(c => c.alive && c.row == row && c.col == col).OrderBy(c => c.id).ToList();
+        return state.carpets
+            .Where(c => c.alive && c.row == row && c.col == col)
+            .OrderBy(OverlapBottomToTopOrder)
+            .ThenByDescending(c => c.id)
+            .ToList();
+    }
+
+    private static int OverlapSelectionOrder(Carpet carpet)
+    {
+        return carpet != null && carpet.length > 0 ? 0 : 1;
+    }
+
+    private static int OverlapBottomToTopOrder(Carpet carpet)
+    {
+        return carpet != null && carpet.length > 0 ? 1 : 0;
     }
 
     private int GetNextCarpetId()

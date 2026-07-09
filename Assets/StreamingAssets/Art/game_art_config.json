@@ -12,7 +12,7 @@
   "chapters": [
     {
       "chapterIndex": 1,
-      "levels": [1, 2],
+      "levels": [1, 2, 3],
       "sceneBackground": "Art/chapter_1_background.png",
       "sceneBackgroundColor": "#f4f0e8",
       "boardBackgroundColor": "#ffffff",
@@ -20,7 +20,7 @@
     },
     {
       "chapterIndex": 2,
-      "levels": [3, 4],
+      "levels": [4, 5, 6],
       "sceneBackground": "Art/chapter_2_background.png",
       "sceneBackgroundColor": "#e8f1f4",
       "boardBackgroundColor": "#f8fcff",
@@ -28,7 +28,7 @@
     },
     {
       "chapterIndex": 3,
-      "levels": [5, 6],
+      "levels": [7, 8, 9],
       "sceneBackground": "Art/chapter_3_background.png",
       "sceneBackgroundColor": "#eef2e6",
       "boardBackgroundColor": "#fbfff7",
@@ -36,7 +36,7 @@
     },
     {
       "chapterIndex": 4,
-      "levels": [7],
+      "levels": [10, 11, 12],
       "sceneBackground": "Art/chapter_4_background.png",
       "sceneBackgroundColor": "#f3e9ee",
       "boardBackgroundColor": "#fff9fc",
