@@ -21,6 +21,7 @@ public sealed class CarpetGridGame : MonoBehaviour
     private const float MoveAnimationDuration = 0.18f;
     private const float UndoMoveAnimationDuration = 0.09f;
     private const float DownAnimationDuration = 0.55f;
+    private const float TargetAnimationDuration = 2f;
     private const float ActiveCarpetScale = 1.08f;
     private const int ProceduralBoardCellSize = 64;
     private const float DiamondInsetScale = 0.82f;
@@ -1931,7 +1932,7 @@ public sealed class CarpetGridGame : MonoBehaviour
             SetToast("胜利！所有地毯都铺到目标了。");
             if (state.mode == GameMode.Play)
             {
-                Invoke(nameof(ReturnToLevelMenu), 0.7f);
+                Invoke(nameof(ReturnToLevelMenu), TargetAnimationDuration);
             }
         }
         state.victory = won;
