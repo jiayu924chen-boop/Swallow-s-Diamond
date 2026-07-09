@@ -1124,10 +1124,18 @@ Audio/perfect_beauty_bgm
 - 验收方式：重新打开 Unity，确认 Package Manager 中存在 `2D Animation 9.2.2`，控制台没有缺失程序集或包解析错误。
 - 接手风险：该依赖目前来自远端同步；如果其他开发机尚未拉取 `1097fa7`，打开项目时可能出现 `Packages` 解析结果不一致，协作前需先统一包版本。
 
-### 2026-07-09 钻石预制体渲染与方向标识调整（working tree）
+### 2026-07-09 钻石预制体渲染与方向标识调整
 
 - 模块影响：`CarpetGridGame` 改为通过 `Resources/DiamondPrefab/DiamondPrefab` 渲染棋盘钻石与路径钻石；`Assets/Resources/DiamondPrefab/DiamondPrefab.prefab` 新增文本节点和方向装饰节点；新增 `Assets/Font/WhiteFillBlackOutlineText.shader`、`Assets/Font/WhiteFillBlackOutlineText.mat` 供数字描边显示。
 - 行为变化：棋盘上的钻石堆不再直接用代码画单层 `Image + Text`，而是实例化统一预制体；移动和撤销都会记录最近一次方向，渲染时显示金/银方向标识；同色双堆场景会根据 `HasSameColorPair()` 切到银色方向装饰，路径钻石也复用同一套预制体外观。
 - 数据与资源变化：`Carpet.hasMoveDirection`、`lastDirectionRow`、`lastDirectionCol` 三个运行时字段用于保存最近方向；字体材质和描边 Shader 目前还是未提交资源，若删除或改名，预制体文本会退化或丢失样式。
 - 验收方式：在 `Main.unity` 进入 Play，拖动任意钻石堆并执行一次撤销，确认钻石数字仍可见、方向标识会随最近移动方向旋转；再验证同色双堆关卡会显示银色方向装饰，路径菱形仍按占格颜色渲染。
 - 接手风险：该套渲染强依赖预制体内 `10_DiamondNormal`、`20_DiamondSmall`、`30_DirectionGold`、`31_DirectionSilver` 等子节点命名，以及字体材质路径；若美术继续改预制体层级，`FindChildRecursive()` 找不到节点时会静默退回旧 `Image` 样式，容易出现表现不一致但无明显报错。
+
+### 2026-07-09 棋盘视觉、胜利判定与菜单动态背景同步
+
+- 模块影响：`BoardVisualConfig` 与 `CarpetGridGame` 将场景背景和棋盘背景统一收口到同一张背景图；`CarpetGridGame.RefreshVictory()` 的胜利判定改为按“同色任一目标格 + 目标占位不重复”计算；`Assets/Resources/Prefabs/Carpet Level Menu.prefab`、`Assets/StreamingAssets/Menu/menu_config.json` 以及 `Assets/Resource/Animation/{Cloud,CloudGroup,Bird,BirdGroup}` 为主菜单补入云朵、飞鸟和章节映射调整。
+- 行为变化：关卡内不再区分独立的棋盘底图与场景底图，棋盘滚动区透明后直接叠在统一背景上；同色钻石堆只要分别停在任一同色目标格上即可判定完成，但两个堆不能占用同一目标格“重叠通关”；主菜单现在会持续播放云层和鸟群动画，章节入口从 `1-2 / 3-4 / 5-6 / 7` 调整为 `1-3 / 4-6 / 7-8 / 9`。
+- 数据与资源变化：关卡数据新增或调整 `Assets/levels/level-006.json`、`level-008.json`、`level-009.json`；`BoardVisualConfig.asset` 字段从 `boardBackground*` 改为共享 `background*`；菜单预制体新增 `Clouds`、`Birds`、`Statue` 节点并绑定对应 Animator Controller，云朵与鸟群帧动画资源位于 `Assets/Resource/Animation` 和 `Assets/Resources/Menu/animation`。
+- 验收方式：在 `Main.unity` 进入 Play，重点验证同色双堆关卡中两个钻石堆分别停在不同同色目标格时才能触发胜利，同时确认统一背景下棋盘滚动区没有额外底板遮挡；在 `LevelSelectMenu.unity` 进入 Play，确认云朵与鸟群循环播放、四个章节按钮仍能按新关卡分组进入正确关卡。
+- 接手风险：胜利条件已经从“各自固定 target”放宽到“同色目标集合”，后续如果策划重新依赖单一目标位，需要同步回看 `IsAtAnySameColorTarget()` 与 `OccupiesDistinctTargetCells()`；菜单动态背景目前直接绑在预制体层级和 Animator 上，若 UI 再次改层级或替换资源，最容易回归出动画不播放、按钮点击区被装饰层遮挡或章节映射与文档不一致的问题。
