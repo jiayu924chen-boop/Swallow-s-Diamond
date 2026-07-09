@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public sealed class GuideLayerController : MonoBehaviour
 {
+    public event Action<GuideTextType> GuideCompleted;
+
     [SerializeField] private Button nextButton;
     [SerializeField] private GameObject mask;
     [SerializeField] private GameObject guideBox;
@@ -12,6 +14,7 @@ public sealed class GuideLayerController : MonoBehaviour
     [SerializeField] private GuideDialogueBinding[] dialogues = Array.Empty<GuideDialogueBinding>();
 
     private GuideDialogueConfig activeDialogue;
+    private GuideTextType activeGuideType;
     private int lineIndex = -1;
 
     private void Awake()
@@ -23,6 +26,7 @@ public sealed class GuideLayerController : MonoBehaviour
     public void StartGuide(GuideTextType guideType)
     {
         ResolveBindings();
+        activeGuideType = guideType;
         activeDialogue = FindDialogue(guideType);
         lineIndex = 0;
 
@@ -64,7 +68,7 @@ public sealed class GuideLayerController : MonoBehaviour
             return;
         }
 
-        HideGuide();
+        CompleteGuide();
     }
 
     private void UpdateGuideText()
@@ -92,6 +96,15 @@ public sealed class GuideLayerController : MonoBehaviour
         {
             mask.SetActive(false);
         }
+    }
+
+    private void CompleteGuide()
+    {
+        GuideTextType completedGuideType = activeGuideType;
+        HideGuide();
+        activeDialogue = null;
+        lineIndex = -1;
+        GuideCompleted?.Invoke(completedGuideType);
     }
 
     private GuideDialogueConfig FindDialogue(GuideTextType guideType)
