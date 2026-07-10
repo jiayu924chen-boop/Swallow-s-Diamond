@@ -56,11 +56,11 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
     public MenuButtonConfig[] buttonConfigs =
     {
-        new MenuButtonConfig { label = "\u7ae0\u8282\u4e00", levels = new[] { 1, 2 } },
-        new MenuButtonConfig { label = "\u7ae0\u8282\u4e8c", levels = new[] { 3, 4 } },
-        new MenuButtonConfig { label = "\u7ae0\u8282\u4e09", levels = new[] { 5, 6 } },
-        new MenuButtonConfig { label = "\u7ae0\u8282\u56db", levels = new[] { 7 } },
-        new MenuButtonConfig { label = "\u7ae0\u8282\u4e94", levels = new[] { 10 } }
+        new MenuButtonConfig { label = "\u7ae0\u8282\u4e00", levels = new[] { 1, 2, 3 } },
+        new MenuButtonConfig { label = "\u7ae0\u8282\u4e8c", levels = new[] { 4, 5, 6 } },
+        new MenuButtonConfig { label = "\u7ae0\u8282\u4e09", levels = new[] { 7, 8, 9 } },
+        new MenuButtonConfig { label = "\u7ae0\u8282\u56db", levels = new[] { 10, 11, 12 } },
+        new MenuButtonConfig { label = "\u7ae0\u8282\u4e94", levels = new[] { 13 } }
     };
 
     [Header("Existing Scene Bindings")]
@@ -233,6 +233,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         }
 
         instance.BindChapterButtons();
+        instance.TryStartSwallowsEndingGate();
         instance.TryStartChapterFiveStatueGate();
     }
 
@@ -252,8 +253,8 @@ public sealed class CarpetLevelMenu : MonoBehaviour
     {
         if (!CarpetLevelFlow.TryConsumePendingMenuGuide(out GuideTextType guideType))
         {
-            TryStartChapterFiveStatueGate();
             TryStartSwallowsEndingGate();
+            TryStartChapterFiveStatueGate();
             return;
         }
 
@@ -446,21 +447,26 @@ public sealed class CarpetLevelMenu : MonoBehaviour
 
         if (guideType != GuideTextType.StartGame)
         {
-            TryStartChapterFiveStatueGate();
             TryStartSwallowsEndingGate();
+            TryStartChapterFiveStatueGate();
             return;
         }
 
         UnlockFirstChapter();
         BindChapterButtons();
-        TryStartChapterFiveStatueGate();
         TryStartSwallowsEndingGate();
+        TryStartChapterFiveStatueGate();
     }
 
     private void TryStartChapterFiveStatueGate()
     {
         if (chapterFiveStatuePlaying || !IsChapterFiveStatuePending())
         {
+            return;
+        }
+        if (IsSwallowsEndingPending() || HasChapterFiveProgress())
+        {
+            ClearChapterFiveStatueGate();
             return;
         }
 
@@ -1495,15 +1501,15 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         switch (index)
         {
             case 0:
-                return new MenuButtonConfig { label = "\u7ae0\u8282\u4e00", levels = new[] { 1, 2 } };
+                return new MenuButtonConfig { label = "\u7ae0\u8282\u4e00", levels = new[] { 1, 2, 3 } };
             case 1:
-                return new MenuButtonConfig { label = "\u7ae0\u8282\u4e8c", levels = new[] { 3, 4 } };
+                return new MenuButtonConfig { label = "\u7ae0\u8282\u4e8c", levels = new[] { 4, 5, 6 } };
             case 2:
-                return new MenuButtonConfig { label = "\u7ae0\u8282\u4e09", levels = new[] { 5, 6 } };
+                return new MenuButtonConfig { label = "\u7ae0\u8282\u4e09", levels = new[] { 7, 8, 9 } };
             case 3:
-                return new MenuButtonConfig { label = "\u7ae0\u8282\u56db", levels = new[] { 7 } };
+                return new MenuButtonConfig { label = "\u7ae0\u8282\u56db", levels = new[] { 10, 11, 12 } };
             case 4:
-                return new MenuButtonConfig { label = "\u7ae0\u8282\u4e94", levels = new[] { 10 } };
+                return new MenuButtonConfig { label = "\u7ae0\u8282\u4e94", levels = new[] { 13 } };
             default:
                 return new MenuButtonConfig { label = "\u6309\u94ae " + (index + 1), levels = new[] { index + 1 } };
         }
@@ -1614,6 +1620,11 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         {
             return;
         }
+        if (HasChapterFiveProgress())
+        {
+            ClearChapterFiveStatueGate();
+            return;
+        }
 
         int chapterFourLevelCount = GetConfiguredLevelCount(ChapterFourIndex);
         if (chapterFourLevelCount <= 0 || buttonProgress[ChapterFourIndex] < chapterFourLevelCount)
@@ -1627,6 +1638,18 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         }
 
         PlayerPrefs.SetInt(ChapterFiveStatuePendingKey, 1);
+    }
+
+    private static void ClearChapterFiveStatueGate()
+    {
+        PlayerPrefs.SetInt(ChapterFiveStatuePendingKey, 0);
+        PlayerPrefs.SetInt(ChapterFiveStatueCompletedKey, 1);
+        PlayerPrefs.Save();
+    }
+
+    private static bool HasChapterFiveProgress()
+    {
+        return ChapterFiveIndex < buttonProgress.Length && buttonProgress[ChapterFiveIndex] > 0;
     }
 
     private static bool IsChapterFiveStatuePending()

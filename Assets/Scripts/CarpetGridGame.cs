@@ -864,23 +864,23 @@ public sealed class CarpetGridGame : MonoBehaviour
     private void LoadSavedLevels()
     {
         savedLevels.Clear();
-        foreach (string path in GetLevelJsonPaths())
+        foreach (LevelJsonSource source in GetLevelJsonSources())
         {
             int levelNumber;
-            if (!TryGetNumericLevelNumber(path, out levelNumber))
+            if (!TryGetNumericLevelNumber(source.name, out levelNumber))
             {
                 continue;
             }
 
             LevelData data;
             string error;
-            if (TryLoadLevelJson(path, out data, out error))
+            if (TryLoadLevelJson(source.json, out data, out error))
             {
                 savedLevels[levelNumber] = data;
             }
             else
             {
-                Debug.LogWarning("Failed to load level JSON " + path + ": " + error);
+                Debug.LogWarning("Failed to load level JSON " + source.name + ": " + error);
             }
         }
     }
@@ -904,12 +904,37 @@ public sealed class CarpetGridGame : MonoBehaviour
             }
             else
             {
-                ClearLevelView("No level JSON found in Assets/levels.");
+                ClearLevelView("No level JSON found in Resources/levels.");
             }
         }
     }
 
-    private IEnumerable<string> GetLevelJsonPaths()
+    private IEnumerable<LevelJsonSource> GetLevelJsonSources()
+    {
+        foreach (TextAsset levelAsset in Resources.LoadAll<TextAsset>(LevelFolderName))
+        {
+            if (levelAsset != null && !string.IsNullOrWhiteSpace(levelAsset.text))
+            {
+                yield return new LevelJsonSource(levelAsset.name, levelAsset.text);
+            }
+        }
+
+        foreach (string path in GetLegacyLevelJsonPaths())
+        {
+            string json;
+            string error;
+            if (TryReadLevelJsonFile(path, out json, out error))
+            {
+                yield return new LevelJsonSource(path, json);
+            }
+            else
+            {
+                Debug.LogWarning("Failed to read level JSON " + path + ": " + error);
+            }
+        }
+    }
+
+    private IEnumerable<string> GetLegacyLevelJsonPaths()
     {
         string assetLevelFolder = Path.Combine(Application.dataPath, LevelFolderName);
         if (Directory.Exists(assetLevelFolder))
@@ -965,13 +990,28 @@ public sealed class CarpetGridGame : MonoBehaviour
         return int.TryParse(digits, out levelNumber) && levelNumber > 0;
     }
 
-    private bool TryLoadLevelJson(string path, out LevelData data, out string error)
+    private static bool TryReadLevelJsonFile(string path, out string json, out string error)
+    {
+        json = "";
+        error = "";
+        try
+        {
+            json = File.ReadAllText(path);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            error = exception.Message;
+            return false;
+        }
+    }
+
+    private bool TryLoadLevelJson(string json, out LevelData data, out string error)
     {
         data = null;
         error = "";
         try
         {
-            string json = File.ReadAllText(path);
             LevelData direct = JsonUtility.FromJson<LevelData>(json);
             if (IsUsableLevelData(direct))
             {
@@ -3683,6 +3723,18 @@ public sealed class CarpetGridGame : MonoBehaviour
         public string color = "";
         public string groupId = "";
         public string passColor = "";
+    }
+
+    private sealed class LevelJsonSource
+    {
+        public readonly string name;
+        public readonly string json;
+
+        public LevelJsonSource(string name, string json)
+        {
+            this.name = name;
+            this.json = json;
+        }
     }
 
     [Serializable]
