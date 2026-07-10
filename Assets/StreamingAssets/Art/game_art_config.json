@@ -44,11 +44,7 @@
     },
     {
       "chapterIndex": 5,
-      "levels": [10],
-      "sceneBackground": "Art/chapter_4_background.png",
-      "sceneBackgroundColor": "#f3e9ee",
-      "boardBackgroundColor": "#fff9fc",
-      "emptyCellColor": "#ffffff"
+      "levels": [13]
     }
   ]
 }

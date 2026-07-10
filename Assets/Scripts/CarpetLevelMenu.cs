@@ -227,9 +227,13 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         }
 
         LoadProgress();
+        if (instance.TryStartSwallowsEndingGate())
+        {
+            return;
+        }
+
         instance.BindChapterButtons();
         instance.TryStartChapterFiveStatueGate();
-        instance.TryStartSwallowsEndingGate();
     }
 
     private void Awake()
@@ -360,10 +364,17 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         swallowsObject = swallowsObject != null ? swallowsObject : FindChildRecursive(transform, "Swallows", "Swallow")?.gameObject;
 
         ApplyExistingBackground();
-        BindChapterButtons();
         BindSettingsControls();
-        BindExistingDecorations();
-        BindExistingAnimations();
+        if (IsSwallowsEndingPending())
+        {
+            StopNonSwallowsMenuAnimations();
+        }
+        else
+        {
+            BindChapterButtons();
+            BindExistingDecorations();
+            BindExistingAnimations();
+        }
     }
 
     private static void EnsureEventSystemExists()
@@ -550,11 +561,11 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         BindChapterButtons();
     }
 
-    private void TryStartSwallowsEndingGate()
+    private bool TryStartSwallowsEndingGate()
     {
         if (swallowsEndingPlaying || !IsSwallowsEndingPending())
         {
-            return;
+            return false;
         }
 
         if (swallowsObject == null)
@@ -565,9 +576,10 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         {
             Debug.LogWarning("CarpetLevelMenu Swallows object is missing; entering ending without swallows animation.");
             CompleteSwallowsEndingGate();
-            return;
+            return true;
         }
 
+        StopNonSwallowsMenuAnimations();
         swallowsEndingPlaying = true;
         swallowsObject.SetActive(true);
 
@@ -589,10 +601,68 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         {
             Debug.LogWarning("CarpetLevelMenu Swallows animator is missing; entering ending without swallows animation.");
             CompleteSwallowsEndingGate();
-            return;
+            return true;
         }
 
         animator.Play("Swallows", 0, 0f);
+        return true;
+    }
+
+    private void StopNonSwallowsMenuAnimations()
+    {
+        Transform swallowsTransform = swallowsObject != null ? swallowsObject.transform : null;
+
+        foreach (Animator animator in GetComponentsInChildren<Animator>(true))
+        {
+            if (animator == null || IsTransformUnder(animator.transform, swallowsTransform))
+            {
+                continue;
+            }
+
+            animator.enabled = false;
+        }
+
+        foreach (CarpetMenuBackgroundTween tween in GetComponentsInChildren<CarpetMenuBackgroundTween>(true))
+        {
+            if (tween != null)
+            {
+                tween.enabled = false;
+            }
+        }
+
+        foreach (MenuDecorationFrameAnimator frameAnimator in GetComponentsInChildren<MenuDecorationFrameAnimator>(true))
+        {
+            if (frameAnimator != null)
+            {
+                frameAnimator.enabled = false;
+            }
+        }
+
+        foreach (MenuDecorationTriggeredFrameAnimator triggeredAnimator in GetComponentsInChildren<MenuDecorationTriggeredFrameAnimator>(true))
+        {
+            if (triggeredAnimator != null)
+            {
+                triggeredAnimator.enabled = false;
+            }
+        }
+
+        foreach (UnlockArrowPointerMotion pointerMotion in GetComponentsInChildren<UnlockArrowPointerMotion>(true))
+        {
+            if (pointerMotion != null)
+            {
+                pointerMotion.enabled = false;
+            }
+        }
+    }
+
+    private static bool IsTransformUnder(Transform candidate, Transform rootTransform)
+    {
+        if (candidate == null || rootTransform == null)
+        {
+            return false;
+        }
+
+        return candidate == rootTransform || candidate.IsChildOf(rootTransform);
     }
 
     public void CompleteSwallowsEndingGate()
@@ -1621,7 +1691,7 @@ public sealed class CarpetLevelMenu : MonoBehaviour
         {
             PlayerPrefs.SetInt(ChapterTransitionKeyPrefix + index, ChapterTransitionLockToUnlock);
         }
-        else if (previousState == ChapterStateUnlocked && nextState == ChapterStateFinished)
+        else if (previousState == ChapterStateUnlocked && nextState == ChapterStateFinished && index != ChapterFiveIndex)
         {
             PlayerPrefs.SetInt(ChapterTransitionKeyPrefix + index, ChapterTransitionUnlockToFinish);
         }
